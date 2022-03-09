@@ -101,25 +101,24 @@ local mainScene do
             if #input>0 then
                 if not wordHashMap[input] then
                     MES.new('info',"Word \""..input.."\" doesn't exist")
-                    goto BREAK
+                    return
                 end
                 if historyMap[input] then
                     MES.new('info',"You already guessed that word!")
-                    goto BREAK
+                    return
                 end
-                historyMap[input]=true
+
                 local _score=MATH.interval(getSimilarity(answer,input),-1,1)
+                if _score==1 then MES.new('info',"You got it right! --Copilot") end
                 table.insert(history,{
                     id=#history+1,
                     word=input,
                     _score=_score,
                     score=string.format("%.2f%%",100*_score)
                 })
-                if _score==1 then
-                    MES.new('info',"You got it right! --Copilot")
-                end
+
+                historyMap[input]=true
                 input=''
-                ::BREAK::
             end
         elseif key=='tab' then
             input=answer
@@ -140,7 +139,6 @@ local mainScene do
             love.graphics.setColor(1-h._score,1+h._score,1-math.abs(h._score))
             love.graphics.print(h.score,400,50+i*30)
         end
-                            love.graphics.setColor(1,1,1,.26)love.graphics.print(answer,800,500)
     end
 
     mainScene=scene
