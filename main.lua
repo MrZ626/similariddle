@@ -92,12 +92,13 @@ local mainScene do
     end
 
     function scene.keyDown(key,isRep)
-        if isRep then return end
         if key:match('^%a$') then
+            if isRep then return end
             input=input..key
         elseif key=='backspace' then
             input=input:sub(1,-2)
         elseif key=='return' then
+            if isRep then return end
             if #input>0 then
                 if not wordHashMap[input] then
                     MES.new('info',"Word \""..input.."\" doesn't exist")
@@ -121,8 +122,10 @@ local mainScene do
                 input=''
             end
         elseif key=='tab' then
+            if isRep then return end
             input=answer
         elseif key=='escape' then
+            if isRep then return end
             restart()
         end
     end
