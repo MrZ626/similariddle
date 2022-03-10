@@ -165,14 +165,13 @@ local mainScene do
     end
 
     local floatY=0
-    function scene.mouseMove(_,_,_,dy)
+    function scene.touchMove(_,_,_,dy)
         floatY=floatY+dy
         if math.abs(floatY)>20 then
             scene.wheelMoved(0,MATH.sign(floatY))
             floatY=floatY-MATH.sign(floatY)*20
         end
     end
-
 
     function scene.keyDown(key,isRep)
         if key=='return' then
@@ -191,6 +190,16 @@ local mainScene do
             if isRep then return end
             if #history==0 then return end
             restart()
+        elseif key=='up' then
+            scene.wheelMoved(0,1)
+        elseif key=='down' then
+            scene.wheelMoved(0,-1)
+        elseif key=='home' then
+            scene.wheelMoved(0,1e99)
+        elseif key=='end' then
+            scene.wheelMoved(0,-1e99)
+        elseif key=='left' or key=='right' then
+            -- Do nothing
         else
             WIDGET.focus(inputBox)
             return true
