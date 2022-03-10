@@ -7,6 +7,8 @@ Zenitha.setMaxFPS(30)-- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
 
+love.keyboard.setKeyRepeat(true)
+
 SCR.setSize(1000,600)
 
 FONT.load{
@@ -16,6 +18,8 @@ FONT.setDefaultFont('main')
 
 local mainScene do
     local scene={}
+
+    local inputBox=WIDGET.new{type='inputBox',x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
 
     local wordHashMap={}
 
@@ -28,9 +32,42 @@ local mainScene do
     collectgarbage()
 
     local answer
-    local input
     local history
     local historyMap
+
+    local sortFuncNames={
+        'rate_asc',
+        'rate_des',
+        'id_asc',
+        'id_des',
+        'word_asc',
+    }
+    local sortFuncs={
+        rate_asc=function(a,b)
+            return a._score>b._score or a._score==b._score and a.word<b.word
+        end,
+        rate_des=function(a,b)
+            return a._score<b._score or a._score==b._score and a.word>b.word
+        end,
+        id_asc=function(a,b)
+            return a.id<b.id
+        end,
+        id_des=function(a,b)
+            return a.id>b.id
+        end,
+        word_asc=function(a,b)
+            return a.word<b.word
+        end,
+    }
+    local sortMode
+
+    local function restart()
+        answer=questionLib[math.random(#questionLib)]
+        inputBox:setText('')
+        history={}
+        historyMap={}
+        sortMode='rate_asc'
+    end
 
     local function strComp(w1,w2)
         assert(#w1==#w2,"function strComp(w1,w2): #w1 must be equal to #w2")
@@ -80,11 +117,19 @@ local mainScene do
         return maxSimilarity
     end
 
-    local function restart()
-        answer=questionLib[math.random(#questionLib)]
-        input=""
-        history={}
-        historyMap={}
+    local function guess(w)
+        local _score=MATH.interval(getSimilarity(answer,w),-1,1)
+        if _score==1 then MES.new('info',"You got it right!") end
+        table.insert(history,{
+            id=#history+1,
+            word=w,
+            _score=_score,
+            score=string.format("%.2f%%",100*_score)
+        })
+
+        table.sort(history,sortFuncs[sortMode])
+
+        historyMap[w]=true
     end
 
     function scene.enter()
@@ -92,57 +137,78 @@ local mainScene do
     end
 
     function scene.keyDown(key,isRep)
-        if key:match('^%a$') then
+        if key=='return' then
             if isRep then return end
-            input=input..key
-        elseif key=='backspace' then
-            input=input:sub(1,-2)
-        elseif key=='return' then
-            if isRep then return end
-            if #input>0 then
-                if not wordHashMap[input] then
-                    MES.new('info',"Word \""..input.."\" doesn't exist")
-                    return
-                end
-                if historyMap[input] then
-                    MES.new('info',"You already guessed that word!")
-                    return
-                end
-
-                local _score=MATH.interval(getSimilarity(answer,input),-1,1)
-                if _score==1 then MES.new('info',"You got it right! --Copilot") end
-                table.insert(history,{
-                    id=#history+1,
-                    word=input,
-                    _score=_score,
-                    score=string.format("%.2f%%",100*_score)
-                })
-
-                historyMap[input]=true
-                input=''
+            local input=inputBox:getText()
+            if #input==0 then
+                MES.new('info',"Input in a English word then press enter")
+                return
             end
+            if not wordHashMap[input] then
+                MES.new('info',"Word \""..input.."\" doesn't exist")
+                return
+            end
+            if historyMap[input] then
+                MES.new('info',"You already guessed that word!")
+                return
+            end
+
+            guess(input)
+
+            inputBox:setText('')
         elseif key=='tab' then
+            sortMode=TABLE.next(sortFuncNames,sortMode)
+            table.sort(history,sortFuncs[sortMode])
+        elseif key=='=' then
             if isRep then return end
-            input=answer
+            if love.keyboard.isDown('lctrl','rctrl') then
+                inputBox:setText(answer)
+            end
+        elseif key=='_ANS' then
+            inputBox:setText(answer)
         elseif key=='escape' then
             if isRep then return end
+            if #history==0 then return end
             restart()
+        else
+            WIDGET.focus(inputBox)
+            return true
         end
+    end
+
+    local function drawWord(w,h)
+        love.graphics.setColor(COLOR.L)
+        love.graphics.print(w.id,30,95+h*30)
+        love.graphics.print(w.word,150,95+h*30)
+        love.graphics.setColor(1-w._score,1+w._score,1-math.abs(w._score))
+        love.graphics.print(w.score,450,95+h*30)
     end
 
     function scene.draw()
+        -- Dividing line
+        love.graphics.setLineWidth(3)
+        love.graphics.setColor(COLOR.L)
+        love.graphics.line(28,125,900,125)
+
+        FONT.set(15)
+        love.graphics.print(sortMode,910,113)
+
+        --Draw words
         FONT.set(30)
-        love.graphics.setColor(1,1,1)
-        love.graphics.print('> '..input,30,20)
         for i=1,#history do
-            local h=history[i]
-            love.graphics.setColor(1,1,1)
-            love.graphics.print(h.id,30,50+i*30)
-            love.graphics.print(h.word,100,50+i*30)
-            love.graphics.setColor(1-h._score,1+h._score,1-math.abs(h._score))
-            love.graphics.print(h.score,400,50+i*30)
+            if history.id==#history then
+                drawWord(history[i],-.5)
+            end
+            drawWord(history[i],i)
         end
     end
+
+    scene.widgetList={
+        inputBox,
+        WIDGET.new{type='button',pos={1,1},text='give up',  x=-50,y=-50,w=80,h=80,code=WIDGET.c_pressKey'_ANS'},
+        WIDGET.new{type='button',pos={1,1},text='Sort',     x=-140,y=-50,w=80,h=80,code=WIDGET.c_pressKey'tab'},
+        WIDGET.new{type='button',pos={1,1},text='Restart',  x=-230,y=-50,w=80,h=80,code=WIDGET.c_pressKey'escape'},
+    }
 
     mainScene=scene
 end
