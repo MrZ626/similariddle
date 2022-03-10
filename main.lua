@@ -3,7 +3,7 @@ require'Zenitha'
 Zenitha.setAppName('similariddle')
 Zenitha.setVersionText('V0.1')
 Zenitha.setFirstScene('main')
-Zenitha.setMaxFPS(30)-- Enough!
+Zenitha.setMaxFPS(60)-- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
 
@@ -24,7 +24,7 @@ local mainScene do
 
     local scene={}
 
-    local inputBox=WIDGET.new{type='inputBox',x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
+    local inputBox=WIDGET.new{type='inputBox',pos={0,0},x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
 
     local wordHashMap={}
 
@@ -163,6 +163,11 @@ local mainScene do
         restart()
     end
 
+    function scene.resize()
+        inputBox.w=SCR.w/SCR.k-60
+        inputBox:reset()
+    end
+
     function scene.wheelMoved(x,y)
         scroll=math.max(0,math.min(scroll-(x+y),#history-15))-- #history-15 may larger than 15, so cannot use MATH.interval
     end
@@ -218,12 +223,13 @@ local mainScene do
     end
 
     function scene.draw()
+        gc.replaceTransform(SCR.xOy_ul)
         -- Dividing line and sorting mode
         gc.setLineWidth(3)
         gc.setColor(COLOR.L)
-        gc.line(28,125,900,125)
+        gc.line(28,125,SCR.w/SCR.k-100,125)
         FONT.set(15)
-        gc.print(sortMode,910,113)
+        gc.print(sortMode,SCR.w/SCR.k-90,113)
 
         -- Arrow
         FONT.set(40)
