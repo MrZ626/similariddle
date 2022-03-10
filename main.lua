@@ -1,6 +1,6 @@
 require'Zenitha'
 
-Zenitha.setAppName('similaridle')
+Zenitha.setAppName('similariddle')
 Zenitha.setVersionText('V0.1')
 Zenitha.setFirstScene('main')
 Zenitha.setMaxFPS(30)-- Enough!

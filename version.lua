@@ -1,5 +1,5 @@
 return{
-    ["appName"]="Similaridle",
+    ["appName"]="Similariddle",
     ["apkCode"]=1,
     ["verCode"]=010000,
 
