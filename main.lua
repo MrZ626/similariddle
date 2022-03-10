@@ -17,6 +17,8 @@ FONT.load{
 FONT.setDefaultFont('main')
 
 local mainScene do
+    local gc=love.graphics
+
     local scene={}
 
     local inputBox=WIDGET.new{type='inputBox',x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
@@ -32,28 +34,30 @@ local mainScene do
     collectgarbage()
 
     local answer
+    local lastGuess
     local history
     local historyMap
+    local scroll=0
 
     local sortFuncNames={
-        'rate_asc',
         'rate_des',
+        'rate_asc',
         'id_asc',
         'id_des',
         'word_asc',
     }
     local sortFuncs={
-        rate_asc=function(a,b)
+        rate_des=function(a,b)
             return a._score>b._score or a._score==b._score and a.word<b.word
         end,
-        rate_des=function(a,b)
+        rate_asc=function(a,b)
             return a._score<b._score or a._score==b._score and a.word>b.word
-        end,
-        id_asc=function(a,b)
-            return a.id<b.id
         end,
         id_des=function(a,b)
             return a.id>b.id
+        end,
+        id_asc=function(a,b)
+            return a.id<b.id
         end,
         word_asc=function(a,b)
             return a.word<b.word
@@ -64,9 +68,13 @@ local mainScene do
     local function restart()
         answer=questionLib[math.random(#questionLib)]
         inputBox:setText('')
+        lastGuess=nil
+
         history={}
         historyMap={}
-        sortMode='rate_asc'
+
+        sortMode='rate_des'
+        scroll=0
     end
 
     local function strComp(w1,w2)
@@ -117,55 +125,68 @@ local mainScene do
         return maxSimilarity
     end
 
-    local function guess(w)
+    local function guess(w,giveup)
+        if #w==0 then
+            MES.new('info',"Input in a English word then press enter")
+            return
+        end
+        if not wordHashMap[w] then
+            MES.new('info',"Word \""..w.."\" doesn't exist")
+            return
+        end
+        if historyMap[w] then
+            MES.new('info',"Already guessed that word!")
+            return
+        end
+
         local _score=MATH.interval(getSimilarity(answer,w),-1,1)
-        if _score==1 then MES.new('info',"You got it right!") end
-        table.insert(history,{
+        if _score==1 and not giveup then MES.new('info',"You got it right!") end
+        lastGuess={
             id=#history+1,
             word=w,
             _score=_score,
-            score=string.format("%.2f%%",100*_score)
-        })
+            score=giveup and "Give Up" or string.format("%.2f%%",100*_score)
+        }
+        table.insert(history,lastGuess)
+        scroll=0
 
         table.sort(history,sortFuncs[sortMode])
 
         historyMap[w]=true
+        return true
     end
 
     function scene.enter()
         restart()
     end
 
+    function scene.wheelMoved(x,y)
+        scroll=math.max(0,math.min(scroll-(x+y),#history-15))-- #history-15 may larger than 15, so cannot use MATH.interval
+    end
+
+    local floatY=0
+    function scene.mouseMove(_,_,_,dy)
+        floatY=floatY+dy
+        if math.abs(floatY)>20 then
+            scene.wheelMoved(0,MATH.sign(floatY))
+            floatY=floatY-MATH.sign(floatY)*20
+        end
+    end
+
+
     function scene.keyDown(key,isRep)
         if key=='return' then
             if isRep then return end
             local input=inputBox:getText()
-            if #input==0 then
-                MES.new('info',"Input in a English word then press enter")
-                return
+            if guess(input) then
+                inputBox:setText('')
             end
-            if not wordHashMap[input] then
-                MES.new('info',"Word \""..input.."\" doesn't exist")
-                return
-            end
-            if historyMap[input] then
-                MES.new('info',"You already guessed that word!")
-                return
-            end
-
-            guess(input)
-
-            inputBox:setText('')
         elseif key=='tab' then
             sortMode=TABLE.next(sortFuncNames,sortMode)
             table.sort(history,sortFuncs[sortMode])
         elseif key=='=' then
             if isRep then return end
-            if love.keyboard.isDown('lctrl','rctrl') then
-                inputBox:setText(answer)
-            end
-        elseif key=='_ANS' then
-            inputBox:setText(answer)
+            guess(answer,true)
         elseif key=='escape' then
             if isRep then return end
             if #history==0 then return end
@@ -177,37 +198,41 @@ local mainScene do
     end
 
     local function drawWord(w,h)
-        love.graphics.setColor(COLOR.L)
-        love.graphics.print(w.id,30,95+h*30)
-        love.graphics.print(w.word,150,95+h*30)
-        love.graphics.setColor(1-w._score,1+w._score,1-math.abs(w._score))
-        love.graphics.print(w.score,450,95+h*30)
+        gc.setColor(COLOR.L)
+        gc.print(w.id,45,95+h*30)
+        gc.print(w.word,170,95+h*30)
+        gc.setColor(1-w._score,1+w._score,1-math.abs(w._score))
+        gc.print(w.score,450,95+h*30)
     end
 
     function scene.draw()
-        -- Dividing line
-        love.graphics.setLineWidth(3)
-        love.graphics.setColor(COLOR.L)
-        love.graphics.line(28,125,900,125)
-
+        -- Dividing line and sorting mode
+        gc.setLineWidth(3)
+        gc.setColor(COLOR.L)
+        gc.line(28,125,900,125)
         FONT.set(15)
-        love.graphics.print(sortMode,910,113)
+        gc.print(sortMode,910,113)
 
-        --Draw words
+        -- Arrow
+        FONT.set(40)
+        if history[scroll] then gc.print('↑',7,130) end
+        if history[scroll+16] then gc.print('↓',7,530) end
+
+        -- Draw words
         FONT.set(30)
-        for i=1,#history do
-            if history.id==#history then
-                drawWord(history[i],-.5)
-            end
-            drawWord(history[i],i)
+        if lastGuess then
+            drawWord(lastGuess,-.5)
+        end
+        for i=scroll+1,math.min(scroll+15,#history) do
+            drawWord(history[i],i-scroll)
         end
     end
 
     scene.widgetList={
         inputBox,
-        WIDGET.new{type='button',pos={1,1},text='give up',  x=-50,y=-50,w=80,h=80,code=WIDGET.c_pressKey'_ANS'},
-        WIDGET.new{type='button',pos={1,1},text='Sort',     x=-140,y=-50,w=80,h=80,code=WIDGET.c_pressKey'tab'},
-        WIDGET.new{type='button',pos={1,1},text='Restart',  x=-230,y=-50,w=80,h=80,code=WIDGET.c_pressKey'escape'},
+        WIDGET.new{type='button',pos={1,1},text='Sort',    x=-70, y=-50,w=120,h=80,code=WIDGET.c_pressKey'tab'},
+        WIDGET.new{type='button',pos={1,1},text='Give up', x=-200,y=-50,w=120,h=80,code=WIDGET.c_pressKey'='},
+        WIDGET.new{type='button',pos={1,1},text='Restart', x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'escape'},
     }
 
     mainScene=scene
