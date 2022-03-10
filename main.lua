@@ -8,6 +8,9 @@ Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
 
 love.keyboard.setKeyRepeat(true)
+if love.system.getOS()=='Android'or love.system.getOS()=='iOS' then
+    love.window.setFullscreen(true)
+end
 
 SCR.setSize(1000,600)
 
