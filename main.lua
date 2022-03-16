@@ -142,13 +142,24 @@ local mainScene do
             return
         end
 
-        local _score=MATH.interval(getSimilarity(answer,w),-1,1)
-        if _score==1 and not giveup then MES.new('info',"You got it right!") end
+        local _score,result
+        if #w<=#answer/2 or #w>=#answer*2 then
+            _score=-1
+            result="X"
+        else
+            _score=MATH.interval(getSimilarity(answer,w),-1,1)
+            if giveup then
+                result="Give Up"
+            else
+                result=string.format("%.2f%%",100*_score)
+                if _score==1 then MES.new('info',"You got it right!") end
+            end
+        end
         lastGuess={
             id=#history+1,
             word=w,
             _score=_score,
-            score=giveup and "Give Up" or string.format("%.2f%%",100*_score)
+            result=result
         }
         table.insert(history,lastGuess)
         scroll=0
@@ -219,7 +230,7 @@ local mainScene do
         gc.print(w.id,45,95+h*30)
         gc.print(w.word,170,95+h*30)
         gc.setColor(1-w._score,1+w._score,1-math.abs(w._score))
-        gc.print(w.score,450,95+h*30)
+        gc.print(w.result,450,95+h*30)
     end
 
     function scene.draw()
