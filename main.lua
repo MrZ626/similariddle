@@ -41,6 +41,8 @@ local mainScene do
     local history
     local historyMap
     local scroll=0
+    local records={'一','一','一','一','一'}
+    local recordStr="Records: 一  一  一  一  一"
 
     local sortFuncNames={
         'rate_des',
@@ -150,10 +152,16 @@ local mainScene do
             _score=MATH.interval(getSimilarity(answer,w),-1,1)
             if giveup then
                 result="Give Up"
+                table.insert(records,"X")
             else
                 result=string.format("%.2f%%",100*_score)
-                if _score==1 then MES.new('info',"You got it right!") end
+                if _score==1 then
+                    table.insert(records,#history+1)
+                    MES.new('info',"You got it right!")
+                end
             end
+            if #records>5 then table.remove(records,1) end
+            recordStr="Records: "..table.concat(records,"  ")
         end
         lastGuess={
             id=#history+1,
@@ -254,6 +262,13 @@ local mainScene do
         end
         for i=scroll+1,math.min(scroll+15,#history) do
             drawWord(history[i],i-scroll)
+        end
+
+        -- Draw records
+        if records[1] then
+            FONT.set(20)
+            gc.setColor(COLOR.L)
+            gc.printf(recordStr,SCR.w/SCR.k-1100,85,1000,'right')
         end
     end
 
