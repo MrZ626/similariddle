@@ -1,8 +1,8 @@
 return{
     ["appName"]="Similariddle",
-    ["apkCode"]=2,
-    ["verCode"]=010001,
+    ["apkCode"]=3,
+    ["verCode"]=010002,
 
-    ["appVer"]="V1.0.1",
-    ["verStr"]="1.0.1",
+    ["appVer"]="V1.0.2",
+    ["verStr"]="1.0.2",
 }
