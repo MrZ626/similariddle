@@ -40,6 +40,7 @@ local mainScene do
     local lastGuess
     local history
     local historyMap
+    local rawHistory
     local scroll=0
     local records={'一','一','一','一','一'}
     local recordStr="Records: 一  一  一  一  一"
@@ -70,6 +71,10 @@ local mainScene do
     }
     local sortMode
 
+    local function freshRecordStr()
+        recordStr="Records: "..table.concat(records,"  ")
+    end
+
     local function restart()
         answer=questionLib[math.random(#questionLib)]
         inputBox:setText('')
@@ -77,9 +82,19 @@ local mainScene do
 
         history={}
         historyMap={}
+        rawHistory={}
 
         sortMode='rate_des'
         scroll=0
+    end
+
+    local function saveState()
+        FILE.save({
+            answer=answer,
+            hisList=rawHistory,
+            records=records,
+            sortMode=sortMode,
+        },'guesses.dat','-luaon -expand')
     end
 
     local function strComp(w1,w2)
@@ -161,7 +176,7 @@ local mainScene do
                 end
             end
             if #records>5 then table.remove(records,1) end
-            recordStr="Records: "..table.concat(records,"  ")
+            freshRecordStr()
         end
         lastGuess={
             id=#history+1,
@@ -170,16 +185,39 @@ local mainScene do
             result=result
         }
         table.insert(history,lastGuess)
+        table.insert(rawHistory,w)
         scroll=0
 
         table.sort(history,sortFuncs[sortMode])
 
         historyMap[w]=true
+        saveState()
         return true
+    end
+
+    local function loadState()
+        if love.filesystem.getInfo('guesses.dat') then
+            local data=FILE.load('guesses.dat','-luaon')
+
+            answer=data.answer
+            for i=1,#data.hisList do
+                guess(data.hisList[i],data.hisList[i]==answer)
+            end
+            records=data.records
+            freshRecordStr()
+
+            sortMode=data.sortMode
+            table.sort(history,sortFuncs[sortMode])
+        end
     end
 
     function scene.enter()
         restart()
+        local res,info=pcall(loadState)
+        if not res then
+            MES.new('error',info)
+            restart()
+        end
     end
 
     function scene.resize()

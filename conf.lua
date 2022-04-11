@@ -1,5 +1,5 @@
 function love.conf(t)
-    t.identity='Techmino_Galaxy'-- Saving folder
+    t.identity='Similariddle'-- Saving folder
     t.version="11.1"
     t.gammacorrect=false
     t.appendidentity=true-- Search files in source then in save directory
@@ -22,7 +22,7 @@ function love.conf(t)
     W.stencil=1-- Bits/samp of stencil buffer
     W.display=1-- Monitor ID
     W.highdpi=true-- High-dpi mode for the window on a Retina display
-    W.x,W.y=nil
+    -- W.x,W.y=nil
 
     local M=t.modules
     M.window,M.system,M.event,M.thread=true,true,true,true
