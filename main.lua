@@ -87,8 +87,11 @@ local mainScene do
     end
 
     local function restart()
-        answer=questionLib[math.random(#questionLib)]
+        repeat
+            answer=questionLib[math.random(#questionLib)]
+        until answer~=dailyWord
         inputBox:setText('')
+        scene.widgetList[4]._visible=false
         scene.widgetList[5]._visible=true
         lastGuess=nil
 
@@ -162,7 +165,10 @@ local mainScene do
             return
         end
 
-        scene.widgetList[5]._visible=false
+        if #history==0 then
+            scene.widgetList[4]._visible=true
+            scene.widgetList[5]._visible=false
+        end
 
         local _score,result
         if #w<=#answer/2 or #w>=#answer*2 then
@@ -223,7 +229,7 @@ local mainScene do
     function scene.enter()
         math.randomseed(os.date'%Y'*1000+os.date'%m'*100+os.date'%d')
         dailyWord=questionLib[math.random(#questionLib)]
-        math.randomseed(love.timer.getTime())
+        math.randomseed(math.floor(love.timer.getTime()))
 
         restart()
         local res,info=pcall(loadState)
@@ -274,9 +280,11 @@ local mainScene do
             if #history==0 then return end
             if love.timer.getTime()-lastSureTime<1 then
                 restart()
-                table.insert(records,"X")
-                if #records>5 then table.remove(records,1) end
-                freshRecordStr()
+                if answer~=dailyWord then
+                    table.insert(records,"X")
+                    if #records>5 then table.remove(records,1) end
+                    freshRecordStr()
+                end
                 saveState()
             else
                 MES.new('warn','Press again to restart')
@@ -349,7 +357,7 @@ local mainScene do
         WIDGET.new{type='button',pos={1,1},text='Sort',    x=-70, y=-50,w=120,h=80,code=WIDGET.c_pressKey'tab'},
         WIDGET.new{type='button',pos={1,1},text='Give up', x=-200,y=-50,w=120,h=80,code=WIDGET.c_pressKey'='},
         WIDGET.new{type='button',pos={1,1},text='Restart', x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'escape'},
-        WIDGET.new{type='button',pos={1,1},text='Daily',   x=-460,y=-50,w=120,h=80,code=WIDGET.c_pressKey'-'},
+        WIDGET.new{type='button',pos={1,1},text='Daily',   x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'-'},
     }
 
     mainScene=scene
