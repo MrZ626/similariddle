@@ -3,12 +3,12 @@ require'Zenitha'
 Zenitha.setAppName('similariddle')
 Zenitha.setVersionText(require"version".appVer)
 Zenitha.setFirstScene('main')
-Zenitha.setMaxFPS(60)-- Enough!
+Zenitha.setMaxFPS(40)-- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
 
 love.keyboard.setKeyRepeat(true)
-if love.system.getOS()=='Android'or love.system.getOS()=='iOS' then
+if MOBILE then
     love.window.setFullscreen(true)
 end
 
@@ -28,23 +28,20 @@ local mainScene do
 
     local wordHashMap={}
 
-    local questionLib=STRING.split(FILE.load('question_lib.txt'),'\r\n')
+    local questionLib=STRING.split(FILE.load('question_lib.txt','-string'),'\r\n')
     for i=1,#questionLib do wordHashMap[questionLib[i]]=true end
 
-    local _superWordLib=STRING.split(FILE.load('word_lib.txt'),'\r\n')
-    for i=1,#_superWordLib do wordHashMap[_superWordLib[i]]=true end
-    _superWordLib=nil
+    local superWordLib=STRING.split(FILE.load('word_lib.txt','-string'),'\r\n')
+    for i=1,#superWordLib do wordHashMap[superWordLib[i]]=true end
+    superWordLib=nil
     collectgarbage()
 
-    local dailyWord
-    local answer
+    local dailyWord,answer
     local lastGuess
-    local history
-    local historyMap
-    local rawHistory
+    local history,rawHistory,historyMap
     local scroll=0
-    local records={'一','一','一','一','一'}
-    local recordStr="Records: 一  一  一  一  一"
+    local records={'X','X','X','X','X'}
+    local recordStr="Records: X  X  X  X  X"
     local lastSureTime=-1e99
 
     local sortFuncNames={
