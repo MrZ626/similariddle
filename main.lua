@@ -79,7 +79,9 @@ local mainScene do
         },'guesses.dat','-luaon -expand')
     end
 
-    local function freshRecordStr()
+    local function freshRecord(res)
+        if res then table.insert(records,res) end
+        if #records>5 then table.remove(records,1) end
         recordStr="Records: "..table.concat(records,"  ")
     end
 
@@ -149,6 +151,10 @@ local mainScene do
     end
 
     local function guess(w,giveup)
+        if answer==dailyWord and giveup then
+            MES.new('info','Never gonna give~you~up')
+            return
+        end
         if #w==0 then
             MES.new('info',"Input in a English word then press enter")
             return
@@ -175,20 +181,20 @@ local mainScene do
             _score=MATH.interval(getSimilarity(answer,w),-1,1)
             if giveup then
                 result="Give Up"
-                table.insert(records,"X")
+                if answer~=dailyWord then
+                    freshRecord("X")
+                end
             else
                 result=string.format("%.2f%%",100*_score)
                 if _score==1 then
                     if answer==dailyWord then
                         MES.new('info',"Daily puzzle solved!")
                     else
-                        table.insert(records,#history+1)
+                        freshRecord(#history+1)
                         MES.new('info',"You got it right!")
                     end
                 end
             end
-            if #records>5 then table.remove(records,1) end
-            freshRecordStr()
         end
         lastGuess={
             id=#history+1,
@@ -216,7 +222,7 @@ local mainScene do
                 guess(data.hisList[i],data.hisList[i]==answer)
             end
             records=data.records
-            freshRecordStr()
+            freshRecord()
 
             sortMode=data.sortMode
             table.sort(history,sortFuncs[sortMode])
@@ -224,8 +230,9 @@ local mainScene do
     end
 
     function scene.enter()
-        math.randomseed(os.date'%Y'*1000+os.date'%m'*100+os.date'%d')
-        dailyWord=questionLib[math.random(#questionLib)]
+        local r=love.math.newRandomGenerator()
+        r:setSeed(os.date'%Y'*1000+os.date'%m'*100+os.date'%d')
+        dailyWord=questionLib[r:random(#questionLib)]
         math.randomseed(math.floor(love.timer.getTime()))
 
         restart()
@@ -278,9 +285,8 @@ local mainScene do
             if love.timer.getTime()-lastSureTime<1 then
                 restart()
                 if answer~=dailyWord then
-                    table.insert(records,"X")
-                    if #records>5 then table.remove(records,1) end
-                    freshRecordStr()
+                    freshRecord("X")
+                    freshRecord()
                 end
                 saveState()
             else
