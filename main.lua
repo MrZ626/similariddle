@@ -242,7 +242,7 @@ local mainScene do
         if love.filesystem.getInfo('guesses.dat') then
             local data=FILE.load('guesses.dat','-luaon')
 
-            answer=data['answer']
+            newWord(data['answer'])
             result=data['result']
             for i=1,#data['hisList'] do
                 guess(data['hisList'][i],result=='gaveup',true)
