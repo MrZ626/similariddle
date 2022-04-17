@@ -36,12 +36,13 @@ local mainScene do
     superWordLib=nil
     collectgarbage()
 
-    local dailyWord,answer
+    local dailyWord,answer,result
+    local hintStr=""
     local lastGuess
     local history,rawHistory,historyMap
     local scroll=0
-    local records={'X','X','X','X','X'}
-    local recordStr="Records: X  X  X  X  X"
+    local records={'-','-','-','-','-'}
+    local recordStr="Records: -  -  -  -  -"
     local lastSureTime=-1e99
 
     local sortFuncNames={
@@ -73,6 +74,7 @@ local mainScene do
     local function saveState()
         FILE.save({
             answer=answer,
+            result=result,
             hisList=rawHistory,
             records=records,
             sortMode=sortMode,
@@ -83,23 +85,6 @@ local mainScene do
         if res then table.insert(records,res) end
         if #records>5 then table.remove(records,1) end
         recordStr="Records: "..table.concat(records,"  ")
-    end
-
-    local function restart()
-        repeat
-            answer=questionLib[math.random(#questionLib)]
-        until answer~=dailyWord
-        inputBox:setText('')
-        scene.widgetList[4]._visible=false
-        scene.widgetList[5]._visible=true
-        lastGuess=nil
-
-        history={}
-        historyMap={}
-        rawHistory={}
-
-        sortMode='rate_des'
-        scroll=0
     end
 
     local function strComp(w1,w2)
@@ -150,11 +135,41 @@ local mainScene do
         return maxSimilarity
     end
 
-    local function guess(w,giveup)
-        if answer==dailyWord and giveup then
-            MES.new('info','Never gonna give~you~up')
-            return
+    local function newWord(w)
+        if w then
+            answer=w
+        else
+            repeat
+                answer=questionLib[math.random(#questionLib)]
+            until answer~=dailyWord
         end
+
+        local rateRank={}
+        for i=1,#questionLib do
+            rateRank[i]=getSimilarity(answer,questionLib[i])
+        end
+        table.sort(rateRank)
+
+        hintStr=string.format("100th: %.2f%%\n26th: %.2f%%",100*rateRank[#rateRank-99],100*rateRank[#rateRank-25])
+    end
+
+    local function restart()
+        newWord()
+        inputBox:setText('')
+        scene.widgetList[4]._visible=false
+        scene.widgetList[5]._visible=true
+        lastGuess=nil
+
+        result=false
+        history={}
+        historyMap={}
+        rawHistory={}
+
+        sortMode='rate_des'
+        scroll=0
+    end
+
+    local function guess(w,giveup,auto)
         if #w==0 then
             MES.new('info',"Input in a English word then press enter")
             return
@@ -173,25 +188,33 @@ local mainScene do
             scene.widgetList[5]._visible=false
         end
 
-        local _score,result
+        local _score,info
         if #w<=#answer/2 or #w>=#answer*2 then
             _score=-1
-            result="X"
+            info="X"
         else
             _score=MATH.interval(getSimilarity(answer,w),-1,1)
             if giveup then
-                result="Give Up"
-                if answer~=dailyWord then
-                    freshRecord("X")
+                if _score==1 then
+                    info="Give Up"
+                    if answer~=dailyWord or #history==0 then
+                        result='gaveup'
+                        if not auto and #history>0 then
+                            freshRecord("X")
+                        end
+                    end
                 end
             else
-                result=string.format("%.2f%%",100*_score)
+                info=string.format("%.2f%%",100*_score)
                 if _score==1 then
+                    result='win'
                     if answer==dailyWord then
                         MES.new('info',"Daily puzzle solved!")
                     else
-                        freshRecord(#history+1)
-                        MES.new('info',"You got it right!")
+                        if not auto then
+                            freshRecord(#history+1)
+                            MES.new('info',"You got it right!")
+                        end
                     end
                 end
             end
@@ -200,16 +223,18 @@ local mainScene do
             id=#history+1,
             word=w,
             _score=_score,
-            result=result
+            info=info
         }
         table.insert(history,lastGuess)
         table.insert(rawHistory,w)
         scroll=0
 
-        table.sort(history,sortFuncs[sortMode])
-
         historyMap[w]=true
-        saveState()
+
+        if not auto then
+            table.sort(history,sortFuncs[sortMode])
+            saveState()
+        end
         return true
     end
 
@@ -217,14 +242,15 @@ local mainScene do
         if love.filesystem.getInfo('guesses.dat') then
             local data=FILE.load('guesses.dat','-luaon')
 
-            answer=data.answer
-            for i=1,#data.hisList do
-                guess(data.hisList[i],data.hisList[i]==answer)
+            answer=data['answer']
+            result=data['result']
+            for i=1,#data['hisList'] do
+                guess(data['hisList'][i],result=='gaveup',true)
             end
-            records=data.records
+            records=data['records']
             freshRecord()
 
-            sortMode=data.sortMode
+            sortMode=data['sortMode']
             table.sort(history,sortFuncs[sortMode])
         end
     end
@@ -273,26 +299,42 @@ local mainScene do
             table.sort(history,sortFuncs[sortMode])
         elseif key=='=' then
             if isRep then return end
-            if love.timer.getTime()-lastSureTime<1 then
-                guess(answer,true)
+            if result then return end
+            if answer==dailyWord then
+                MES.new('info','Never gonna give~you~up')
             else
-                MES.new('warn','Press again to give up')
+                if love.timer.getTime()-lastSureTime<1 then
+                    guess(answer,true)
+                else
+                    MES.new('warn','Press again to give up')
+                end
+                lastSureTime=love.timer.getTime()
             end
-            lastSureTime=love.timer.getTime()
         elseif key=='escape' then
             if isRep then return end
-            if #history==0 then return end
-            if love.timer.getTime()-lastSureTime<1 then
-                restart()
-                if answer~=dailyWord then
-                    freshRecord("X")
-                    freshRecord()
+            if answer==dailyWord then
+                if #history==0 then
+                    restart()
+                    saveState()
+                elseif love.timer.getTime()-lastSureTime<1 then
+                    restart()
+                    saveState()
+                else
+                    lastSureTime=love.timer.getTime()
+                    MES.new('warn','Press again to restart')
                 end
-                saveState()
-            else
-                MES.new('warn','Press again to restart')
+            elseif #history~=0 then
+                if love.timer.getTime()-lastSureTime<1 then
+                    if not result then
+                        freshRecord("X")
+                    end
+                    restart()
+                    saveState()
+                else
+                    lastSureTime=love.timer.getTime()
+                    MES.new('warn','Press again to restart')
+                end
             end
-            lastSureTime=love.timer.getTime()
         elseif key=='up' then
             scene.wheelMoved(0,1)
         elseif key=='down' then
@@ -305,7 +347,8 @@ local mainScene do
             -- Do nothing
         elseif key=='-' then
             if #history==0 then
-                answer=dailyWord
+                newWord(dailyWord)
+                scene.widgetList[4]._visible=true
                 scene.widgetList[5]._visible=false
                 MES.new('info',"Daily puzzle doesn't effect records")
             end
@@ -320,7 +363,7 @@ local mainScene do
         gc.print(w.id,45,95+h*30)
         gc.print(w.word,170,95+h*30)
         gc.setColor(1-w._score,1+w._score,1-math.abs(w._score))
-        gc.print(w.result,450,95+h*30)
+        gc.print(w.info,450,95+h*30)
     end
 
     function scene.draw()
@@ -333,7 +376,7 @@ local mainScene do
         if history[scroll+16] then gc.print('↓',7,530) end
 
         -- Draw records
-        if records[1] then
+        if answer~=dailyWord then
             FONT.set(20)
             gc.printf(recordStr,SCR.w/SCR.k-1100,85,1000,'right')
         end
@@ -344,6 +387,7 @@ local mainScene do
         gc.line(28,125,SCR.w/SCR.k-100,125)
         FONT.set(15)
         gc.print(sortMode,SCR.w/SCR.k-90,113)
+        gc.printf(hintStr,SCR.w/SCR.k-626,140,600,'right')
 
         -- Draw words
         FONT.set(30)
@@ -357,10 +401,10 @@ local mainScene do
 
     scene.widgetList={
         inputBox,
-        WIDGET.new{type='button',pos={1,1},text='Sort',    x=-70, y=-50,w=120,h=80,code=WIDGET.c_pressKey'tab'},
-        WIDGET.new{type='button',pos={1,1},text='Give up', x=-200,y=-50,w=120,h=80,code=WIDGET.c_pressKey'='},
-        WIDGET.new{type='button',pos={1,1},text='Restart', x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'escape'},
-        WIDGET.new{type='button',pos={1,1},text='Daily',   x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'-'},
+        WIDGET.new{type='button',pos={1,1},text='Sort',             x=-70, y=-50,w=120,h=80,code=WIDGET.c_pressKey'tab'},
+        WIDGET.new{type='button',pos={1,1},text='Give up',          x=-200,y=-50,w=120,h=80,code=WIDGET.c_pressKey'='},
+        WIDGET.new{type='button',pos={1,1},text='Restart',          x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'escape'},
+        WIDGET.new{type='button',pos={1,1},text='Daily',color='lY', x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'-'},
     }
 
     mainScene=scene
