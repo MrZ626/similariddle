@@ -193,15 +193,13 @@ local mainScene do
             _score=-1
             info="X"
         else
-            _score=MATH.interval(getSimilarity(answer,w),-1,1)
-            if giveup then
-                if _score==1 then
-                    info="Give Up"
-                    if answer~=dailyWord or #history==0 then
-                        result='gaveup'
-                        if not auto and #history>0 then
-                            freshRecord("X")
-                        end
+            _score=MATH.clamp(getSimilarity(answer,w),-1,1)
+            if giveup and _score==1 then
+                info="Give Up"
+                if answer~=dailyWord or #history==0 then
+                    result='gaveup'
+                    if not auto and #history>0 then
+                        freshRecord("X")
                     end
                 end
             else
@@ -275,7 +273,7 @@ local mainScene do
     end
 
     function scene.wheelMoved(x,y)
-        scroll=math.max(0,math.min(scroll-(x+y),#history-15))-- #history-15 may larger than 15, so cannot use MATH.interval
+        scroll=math.max(0,math.min(scroll-(x+y),#history-15))-- #history-15 may larger than 15, so cannot use MATH.clamp
     end
 
     local floatY=0
