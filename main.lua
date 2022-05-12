@@ -87,36 +87,30 @@ local mainScene do
         recordStr="Records: "..table.concat(records,"  ")
     end
 
-    local function strComp(w1,w2)
-        assert(#w1==#w2,"function strComp(w1,w2): #w1 must be equal to #w2")
-        local len=#w1
+    local function strComp(s1,s2)
+        assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
+        local len=#s1
         local t1,t2={},{}
         for i=1,len do
-            t1[i]=w1:sub(i,i)
-            t2[i]=w2:sub(i,i)
+            t1[i]=s1:sub(i,i)
+            t2[i]=s2:sub(i,i)
         end
         local score=0
         for i=1,len do
-            local n=1
-            while true do
-                local d=math.floor(n/2)*(-1)^n
-                if d>len then break end
-                if t1[i]==t2[i+d] then
-                    score=score+1/(math.abs(d)+1)
-                    break
+            for _=0,1 do-- for swap t1 and t2 then try again
+                local n=1
+                while true do
+                    local d=math.floor(n/2)*(-1)^n-- 0, -1, 1, -2, 2, ...
+                    if d>=len then break end
+                    if t1[i]==t2[i+d] then
+                        score=score+1/(math.abs(d)+1)-- Arithmetic typewriter
+                        -- score=score+1-math.abs(d)/len/2-- Graceful failure
+                        -- score=score+1-math.max(math.abs(d)/3,0)-- Primary student
+                        break
+                    end
+                    n=n+1
                 end
-                n=n+1
-            end
-
-            n=1
-            while true do
-                local d=math.floor(n/2)*(-1)^n
-                if d>len then break end
-                if t2[i]==t1[i+d] then
-                    score=score+1/(math.abs(d)+1)
-                    break
-                end
-                n=n+1
+                t1,t2=t2,t1
             end
         end
         return score/len/2
