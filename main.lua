@@ -6,6 +6,7 @@ Zenitha.setFirstScene('main')
 Zenitha.setMaxFPS(40)-- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
+Zenitha.setOnFnKeys({NULL,NULL,NULL,NULL,NULL,NULL,love._openConsole})
 
 love.keyboard.setKeyRepeat(true)
 if MOBILE then
@@ -105,7 +106,8 @@ local mainScene do
                     if t1[i]==t2[i+d] then
                         score=score+1/(math.abs(d)+1)-- Arithmetic typewriter
                         -- score=score+1-math.abs(d)/len/2-- Graceful failure
-                        -- score=score+1-math.max(math.abs(d)/3,0)-- Primary student
+                        -- score=score+math.max(1-math.abs(d)/3,0)-- Trisected principle
+                        -- ? -- stable maintenance
                         break
                     end
                     n=n+1
