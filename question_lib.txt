@@ -336,7 +336,6 @@ beach
 beam
 bean
 bear
-bear
 beard
 beast
 beat
@@ -444,7 +443,6 @@ boundary
 bow
 bowl
 box
-box
 boy
 brain
 brake
@@ -535,7 +533,6 @@ camp
 campaign
 campus
 can
-can
 canada
 canadian
 canal
@@ -571,7 +568,6 @@ carrot
 carry
 cart
 carve
-case
 case
 cash
 cassette
@@ -643,7 +639,6 @@ childish
 chill
 chimney
 chin
-china
 china
 chinese
 chocolate
@@ -832,7 +827,6 @@ contain
 container
 contemporary
 contempt
-content
 content
 contest
 continent
@@ -1320,7 +1314,6 @@ evaluate
 evaporate
 eve
 even
-even
 evening
 event
 eventually
@@ -1402,7 +1395,6 @@ extreme
 extremely
 eye
 eyesight
-
 facility
 fact
 factor
@@ -1414,7 +1406,6 @@ fail
 failure
 faint
 fair
-fair
 fairly
 faith
 faithful
@@ -1425,7 +1416,6 @@ familiar
 family
 famine
 famous
-fan
 fan
 fancy
 far
@@ -1440,7 +1430,6 @@ fast
 fasten
 fatal
 fate
-father
 father
 fatigue
 fault
@@ -1491,7 +1480,6 @@ financial
 find
 finding
 fine
-fine
 finger
 finish
 fire
@@ -1508,7 +1496,6 @@ flag
 flame
 flare
 flash
-flat
 flat
 flavour
 fleet
@@ -1752,8 +1739,6 @@ gum
 gun
 gunpowder
 gymnasium
-英语四级单词表（h）
-
 habit
 habitual
 hair
@@ -1904,7 +1889,6 @@ hurt
 husband
 hut
 hydrogen
-ice
 ice
 idea
 ideal
@@ -2073,11 +2057,8 @@ italian
 item
 its
 itself
-英语四级单词表（j、k）
-
 jacket
 jail
-jam
 jam
 january
 japan
@@ -2111,8 +2092,6 @@ jury
 just
 justice
 justify
-
-
 keen
 keep
 keeper
@@ -2124,7 +2103,6 @@ kid
 kill
 kilogram
 kilometer
-kind
 kind
 kindness
 king
@@ -2141,8 +2119,6 @@ knock
 knot
 know
 knowledge
-语四级单词表（l）
-
 lab
 label
 laboratory
@@ -2168,7 +2144,6 @@ large
 largely
 laser
 last
-last
 late
 lately
 later
@@ -2186,7 +2161,6 @@ lay
 layer
 layout
 lazy
-lead
 lead
 leader
 leadership
@@ -2232,17 +2206,14 @@ license
 lick
 lid
 lie
-lie
 lieutenant
 life
 lifetime
 lift
 light
-light
 lighten
 lightly
 lightning
-like
 like
 likely
 likewise
@@ -2270,7 +2241,6 @@ live
 lively
 liver
 living
-living
 load
 loaf
 loan
@@ -2284,7 +2254,6 @@ log
 logic
 logical
 lonely
-long
 long
 look
 loop
@@ -2345,7 +2314,6 @@ many
 map
 marble
 march
-march
 margin
 marine
 mark
@@ -2362,7 +2330,6 @@ master
 masterpiece
 mat
 match
-match
 mate
 material
 materialism
@@ -2373,13 +2340,11 @@ matter
 mature
 maximum
 may
-may
 maybe
 mayor
 me
 meadow
 meal
-mean
 mean
 mean
 meaning
@@ -2412,7 +2377,6 @@ mention
 menu
 merchant
 mercury
-mercury
 mercy
 mere
 merely
@@ -2434,7 +2398,6 @@ middle
 midnight
 midst
 might
-might
 mild
 mile
 military
@@ -2443,7 +2406,6 @@ mill
 millimetre
 million
 mind
-mine
 mine
 miner
 mineral
@@ -2454,12 +2416,10 @@ minor
 minority
 minus
 minute
-minute
 miracle
 mirror
 miserable
 mislead
-miss
 miss
 missile
 missing
@@ -2638,7 +2598,6 @@ oak
 oar
 obey
 object
-object
 objection
 objective
 oblige
@@ -2770,7 +2729,6 @@ physicist
 physics
 piano
 pick
-pick
 picnic
 picture
 pie
@@ -2793,7 +2751,6 @@ pipe
 pipeline
 pistol
 pit
-pitch
 pitch
 pity
 place
@@ -2830,7 +2787,6 @@ point
 poison
 poisonous
 pole
-pole
 police
 policeman
 policy
@@ -2843,9 +2799,7 @@ pollute
 pollution
 pond
 pool
-pool
 poor
-pop
 pop
 popular
 population
@@ -2867,14 +2821,12 @@ possible
 possibly
 post
 post
-post
 postage
 postman
 postpone
 pot
 potato
 potential
-pound
 pound
 pour
 poverty
@@ -2906,7 +2858,6 @@ prepare
 preposition
 prescribe
 presence
-present
 present
 present
 presently
@@ -3000,11 +2951,9 @@ pull
 pulse
 pump
 punch
-punch
 punctual
 punish
 punishment
-pupil
 pupil
 puppet
 purchase
@@ -3043,9 +2992,7 @@ quotation
 quote
 rabbit
 race
-race
 racial
-rack
 rack
 racket
 radar
@@ -3096,7 +3043,6 @@ realize
 really
 realm
 reap
-rear
 rear
 reason
 reasonable
@@ -3230,7 +3176,6 @@ response
 responsibility
 responsible
 rest
-rest
 restaurant
 restless
 restore
@@ -3269,7 +3214,6 @@ rifle
 right
 rigid
 ring
-ring
 ripe
 ripen
 rise
@@ -3284,7 +3228,6 @@ robber
 robbery
 robe
 robot
-rock
 rock
 rocket
 rod
@@ -3310,7 +3253,6 @@ rouse
 route
 routine
 row
-row
 royal
 rub
 rubber
@@ -3335,7 +3277,6 @@ sad
 saddle
 sadly
 sadness
-safe
 safe
 safely
 safety
@@ -3366,7 +3307,6 @@ save
 saving
 saw
 say
-scale
 scale
 scan
 scar
@@ -3399,13 +3339,11 @@ screen
 screw
 sea
 seal
-seal
 seaman
 seaport
 search
 season
 seat
-second
 second
 secondary
 secondly
@@ -3475,7 +3413,6 @@ sharply
 shave
 she
 shear
-shed
 shed
 sheep
 sheet
@@ -3611,10 +3548,8 @@ soda
 soft
 softly
 soil
-soil
 solar
 soldier
-sole
 sole
 solely
 solemn
@@ -3640,7 +3575,6 @@ sorrow
 sorry
 sort
 soul
-sound
 sound
 soup
 sour
@@ -3699,7 +3633,6 @@ spot
 spray
 spread
 spring
-spring
 springtime
 sprinkle
 spur
@@ -3709,7 +3642,6 @@ squeeze
 squirrel
 stab
 stability
-stable
 stable
 stack
 stadium
@@ -3729,7 +3661,6 @@ stare
 start
 startle
 starve
-state
 state
 statement
 statesman
@@ -3796,7 +3727,6 @@ strike
 string
 strip
 stripe
-stroke
 stroke
 strong
 strongly
@@ -3879,7 +3809,6 @@ suspend
 suspicion
 sustain
 swallow
-swallow
 swamp
 swan
 swarm
@@ -3917,7 +3846,6 @@ tame
 tan
 tank
 tap
-tap
 tape
 target
 task
@@ -3929,7 +3857,6 @@ teach
 teacher
 teaching
 team
-tear
 tear
 technical
 technician
@@ -3952,11 +3879,9 @@ temptation
 ten
 tenant
 tend
-tend
 tendency
 tender
 tennis
-tense
 tense
 tent
 tenth
@@ -4040,13 +3965,11 @@ timid
 tin
 tiny
 tip
-tip
 tire
 tired
 tissue
 title
 to
-toast
 toast
 tobacco
 today
@@ -4243,7 +4166,6 @@ us
 usage
 use
 used
-used
 useful
 useless
 user
@@ -4252,7 +4174,6 @@ usually
 utility
 utilize
 utmost
-utter
 utter
 vacant
 vacation
@@ -4293,7 +4214,6 @@ via
 vibrate
 vibration
 vice
-vice
 victim
 victorious
 victory
@@ -4329,7 +4249,6 @@ voluntary
 vote
 voyage
  x y z
-wage
 wage
 waggon
 waist
@@ -4382,7 +4301,6 @@ weld
 welfare
 well
 well
-well
 west
 western
 westward
@@ -4427,7 +4345,6 @@ will
 willing
 win
 wind
-wind
 window
 wine
 wing
@@ -4460,7 +4377,6 @@ worker
 workman
 workshop
 world
-world
 worm
 worry
 worse
@@ -4480,7 +4396,6 @@ write
 writer
 writing
 wrong
-yard
 yard
 yawn
 year
