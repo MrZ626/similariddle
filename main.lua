@@ -17,7 +17,6 @@ SCR.setSize(1000, 600)
 
 FONT.setDefaultFont('main')
 FONT.load('main','codePixel Regular.ttf')
-FONT.get(80)
 
 WIDGET._prototype.button.cornerR=0
 
