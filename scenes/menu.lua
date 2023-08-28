@@ -1,3 +1,12 @@
+local function playDaily()
+    local day=os.date("%Y")*366+os.date("%j")
+    math.randomseed(day)
+    local lib=MATH.randFreq{7,2,1,0}
+    local len=MATH.randFreq{3,5,4,3}
+    local mode=MATH.randFreq{6,4,3,2,1}
+    SCN.go('play',nil,lib,len,mode)
+end
+
 local scene={}
 
 function scene.draw()
@@ -8,7 +17,7 @@ function scene.draw()
 end
 
 scene.widgetList={
-    WIDGET.new{type='button',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=playDaily},
-    WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn('custom','fastFade')},
+    WIDGET.new{type='button_fill',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=playDaily},
+    WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
 }
 return scene
