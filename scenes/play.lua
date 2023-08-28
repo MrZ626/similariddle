@@ -1,30 +1,8 @@
-local wordLength={
-    {4,6},
-    {7,9},
-    {10,12},
-    {13,62},
-}
-
 local gc=love.graphics
 
 local scene={}
 
 local inputBox=WIDGET.new{type='inputBox',pos={0,0},x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
-
-local wordHashMap={}
-
-local questionLib=STRING.split(FILE.load('question_lib.txt','-string'),'\r\n')
-for i=1,#questionLib do
-    wordHashMap[questionLib[i]]=true
-end
-
-do
-    local superWordLib=STRING.split(FILE.load('word_lib.txt','-string'),'\r\n')
-    for i=1,#superWordLib do
-        wordHashMap[superWordLib[i]]=true
-    end
-end
-collectgarbage()
 
 local dailyWord,answer,result
 local hintStr=""
@@ -55,10 +33,6 @@ local sortFuncs={
 }
 local sortMode
 
-local function saveState()
-    FILE.save({answer=answer,result=result,hisList=rawHistory,records=records,sortMode=sortMode},'guesses.dat','-luaon -expand')
-end
-
 local function freshRecord(res)
     if res then
         table.insert(records,res)
@@ -87,9 +61,12 @@ local function strComp(s1,s2)
                     break
                 end
                 if t1[i]==t2[i+d] then
-                    score=score+1/(math.abs(d)+1) -- Arithmetic typewriter
-                    -- score=score+1-math.abs(d)/len/2-- Graceful failure
-                    -- score=score+math.max(1-math.abs(d)/3,0)-- Trisected principle
+                    score=score+Options.matchRateFunc[1](len,d)
+                    -- score=score+1/(math.abs(d)+1) -- Arithmetic typewriter
+                    -- score=score+1-math.abs(d)/len/2 -- Graceful failure
+                    -- score=score+math.max(1-math.abs(d)/3,0) -- Trisected principle
+                    -- score=score+0 -- ?
+                    -- score=score+0 -- ?
                     -- ? -- stable maintenance
                     break
                 end
@@ -111,26 +88,7 @@ local function getSimilarity(w1,w2)
     return maxSimilarity
 end
 
-local function newWord(w)
-    if w then
-        answer=w
-    else
-        repeat
-            answer=questionLib[math.random(#questionLib)]
-        until answer~=dailyWord
-    end
-
-    local rateRank={}
-    for i=1,#questionLib do
-        rateRank[i]=getSimilarity(answer,questionLib[i])
-    end
-    table.sort(rateRank)
-
-    hintStr=string.format("100th: %.2f%%\n26th: %.2f%%",100*rateRank[#rateRank-99],100*rateRank[#rateRank-25])
-end
-
 local function restart()
-    newWord()
     inputBox:setText('')
     scene.widgetList[4]._visible=false
     scene.widgetList[5]._visible=true
@@ -150,7 +108,7 @@ local function guess(w,giveup,auto)
         MSG.new('info',"Input in a English word then press enter")
         return
     end
-    if not wordHashMap[w] then
+    if not WordHashMap[w] then
         MSG.new('info',"Word \""..w.."\" doesn't exist")
         return
     end
@@ -202,40 +160,12 @@ local function guess(w,giveup,auto)
 
     if not auto then
         table.sort(history,sortFuncs[sortMode])
-        saveState()
     end
     return true
 end
 
-local function loadState()
-    if love.filesystem.getInfo('guesses.dat') then
-        local data=FILE.load('guesses.dat','-luaon')
-
-        newWord(data['answer'])
-        result=data['result']
-        -- for i=1,#data['hisList'] do
-        --     guess(data['hisList'][i],result=='gaveup',true)
-        -- end
-        records=data['records']
-        freshRecord()
-
-        sortMode=data['sortMode']
-        table.sort(history,sortFuncs[sortMode])
-    end
-end
-
 function scene.enter()
-    local r=love.math.newRandomGenerator()
-    r:setSeed(os.date'%Y'*1000+os.date'%m'*100+os.date'%d')
-    dailyWord=questionLib[r:random(#questionLib)]
-    math.randomseed(math.floor(love.timer.getTime()))
-
     restart()
-    local res,info=pcall(loadState)
-    if not res then
-        MSG.new('error',info)
-        restart()
-    end
 end
 
 function scene.resize()
@@ -258,23 +188,14 @@ end
 
 function scene.keyDown(key,isRep)
     if key=='return' then
-        if isRep then
-            return
-        end
+        if isRep then return end
         local input=inputBox:getText()
         if guess(input) then
             inputBox:setText('')
         end
-    elseif key=='tab' then
-        sortMode=TABLE.next(sortFuncNames,sortMode)
-        table.sort(history,sortFuncs[sortMode])
     elseif key=='=' then
-        if isRep then
-            return
-        end
-        if result then
-            return
-        end
+        if isRep then return end
+        if result then return end
         if answer==dailyWord then
             MSG.new('info','Never gonna give~you~up')
         else
@@ -286,31 +207,11 @@ function scene.keyDown(key,isRep)
             lastSureTime=love.timer.getTime()
         end
     elseif key=='escape' then
-        if isRep then
-            return
-        end
-        if answer==dailyWord then
-            if #history==0 then
-                restart()
-                saveState()
-            elseif love.timer.getTime()-lastSureTime<1 then
-                restart()
-                saveState()
-            else
-                lastSureTime=love.timer.getTime()
-                MSG.new('warn','Press again to restart')
-            end
-        elseif #history~=0 then
-            if love.timer.getTime()-lastSureTime<1 then
-                if not result then
-                    freshRecord("X")
-                end
-                restart()
-                saveState()
-            else
-                lastSureTime=love.timer.getTime()
-                MSG.new('warn','Press again to restart')
-            end
+        if isRep then return end
+        if TASK.lock('sureBack',1) then
+            MSG.new('info',"Press again to quit",1)
+        else
+            SCN.back()
         end
     elseif key=='up' then
         scene.wheelMoved(0,1)
@@ -322,13 +223,6 @@ function scene.keyDown(key,isRep)
         scene.wheelMoved(0,-1e99)
     elseif key=='left' or key=='right' then
         -- Do nothing
-    elseif key=='-' then
-        if #history==0 then
-            newWord(dailyWord)
-            scene.widgetList[4]._visible=true
-            scene.widgetList[5]._visible=false
-            MSG.new('info',"Daily puzzle doesn't effect records")
-        end
     else
         WIDGET.focus(inputBox)
         return true

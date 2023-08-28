@@ -4,7 +4,13 @@ local function playDaily()
     local lib=MATH.randFreq{7,2,1,0}
     local len=MATH.randFreq{3,5,4,3}
     local mode=MATH.randFreq{6,4,3,2,1}
-    SCN.go('play',nil,lib,len,mode)
+    local wordLib=WordLib[Options.name.lib[lib]]
+    SCN.go('play',nil,{
+        word=wordLib[math.random(1,#wordLib)],
+        lib=Options.name.lib[lib],
+        len=Options.name.len[len],
+        mode=Options.name.mode[mode],
+    })
 end
 
 local scene={}
