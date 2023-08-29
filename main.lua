@@ -37,7 +37,7 @@ Options={
     name={
         lib={'CET4','CET6','TEM8','GRE'},
         len={'Short','Medium','Long','Loooooong'},
-        mode={'Easy','Medium','Hard','Extreme','Hell'},
+        model={'Easy','Medium','Hard','Extreme','Hell'},
     },
     lengthLevel={
         {4,6},
@@ -49,6 +49,9 @@ Options={
         function(len,d) return 1/(math.abs(d)+1) end, -- Arithmetic typewriter
         function(len,d) return 1-math.abs(d)/len/2 end, -- Graceful failure
         function(len,d) return math.max(1-math.abs(d)/3,0) end, -- Trisected principle
+        function(len,d) return 0 end, -- stable maintenance
+        function(len,d) return 0 end, -- stable maintenance
+        function(len,d) return 0 end, -- stable maintenance
     },
 }
 
@@ -64,29 +67,69 @@ Primes={2} do
 end
 ABC={} for i=1,385 do if i%5~=0 and i%7~=0 and i%11~=0 then table.insert(ABC,i) end end
 WordLib={
-    CET4=STRING.split(FILE.load('lib_cet4.txt','-string'),'\r\n'),
-    CET6=STRING.split(FILE.load('lib_cet6.txt','-string'),'\r\n'),
-    TEM8=STRING.split(FILE.load('lib_tem8.txt','-string'),'\r\n'),
-    GRE= STRING.split(FILE.load('lib_gre.txt','-string'),'\r\n'),
+    STRING.split(FILE.load('lib_cet4.txt','-string'),'\r\n'),
+    STRING.split(FILE.load('lib_cet6.txt','-string'),'\r\n'),
+    STRING.split(FILE.load('lib_tem8.txt','-string'),'\r\n'),
+    STRING.split(FILE.load('lib_gre.txt','-string'),'\r\n'),
     FULL=STRING.split(FILE.load('lib_full.txt','-string'),'\r\n'),
 }
-WordNumber={}
-for name,lib in next,WordLib do
-    if name~="FULL" then
-        WordNumber[name]={}
-        for i=1,#lib do
-            WordNumber[name][lib[i]]=i
-        end
-        for k,v in next,WordNumber[name] do --- #ABC==240
-            WordNumber[name][k]=385*math.floor((v-1)/240)+ABC[(v-1)%240+1]
-        end
-    end
-end
 WordHashMap={}
 for name,lib in next,WordLib do
     for i=1,#lib do WordHashMap[lib[i]]=name end
 end
 collectgarbage()
+
+-- Game functions
+function NewGame_fixed(word,lib,len,model)
+    SCN.go('play',nil,{
+        fixed=true,
+        word=word,
+        lib=lib,
+        len=len,
+        model=model,
+    })
+end
+function NewGame(lib,len,model)
+    local wordLib=WordLib[lib]
+    math.randomseed(os.time())
+    local word
+    repeat
+        word=wordLib[math.random(1,#wordLib)]
+    until #word>=Options.lengthLevel[len][1] and #word<=Options.lengthLevel[len][2]
+    SCN.go('play',nil,{
+        fixed=false,
+        word=word,
+        lib=lib,
+        len=len,
+        model=model,
+    })
+end
+function PlayFromCode(code)
+    local dataNum=tonumber(code,16)
+    -- print("number: "..dataNum)
+    assert(dataNum and dataNum>0)
+    local _lib=dataNum%5
+    local _len=dataNum%7
+    local _model=dataNum%11
+    -- print("lib: ".._lib)
+    -- print("len: ".._len)
+    -- print("model: ".._model)
+    local _id
+    for i=1548,#Primes do
+        if dataNum%Primes[i]==0 then
+            _id=dataNum/Primes[i]
+            -- print("find prime: "..Primes[i])
+            break
+        end
+    end
+    -- print("abc: ".._id)
+    _id=TABLE.find(ABC,_id%385)+math.floor(_id/385)*240
+    -- print("id: ".._id)
+    local word=WordLib[_lib][_id]
+    -- print("word: "..word)
+    NewGame_fixed(word,_lib,_len,_model)
+    MSG.new('check',"Riddle code loaded!")
+end
 
 -- Title
 TitleString="Similariddle"

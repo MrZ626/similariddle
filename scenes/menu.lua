@@ -3,14 +3,10 @@ local function playDaily()
     math.randomseed(day)
     local lib=MATH.randFreq{7,2,1,0}
     local len=MATH.randFreq{3,5,4,3}
-    local mode=MATH.randFreq{6,4,3,2,1}
-    local wordLib=WordLib[Options.name.lib[lib]]
-    SCN.go('play',nil,{
-        word=wordLib[math.random(1,#wordLib)],
-        lib=Options.name.lib[lib],
-        len=Options.name.len[len],
-        mode=Options.name.mode[mode],
-    })
+    local model=MATH.randFreq{6,4,3,2,1}
+    local wordLib=WordLib[lib]
+    local word=wordLib[math.random(1,#wordLib)]
+    NewGame_fixed(word,lib,len,model)
 end
 
 local scene={}

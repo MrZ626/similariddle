@@ -4,44 +4,12 @@ local scene={}
 
 local inputBox=WIDGET.new{type='inputBox',pos={0,0},x=30,y=20,w=1000-60,h=50,regex='[a-z]'}
 
-local dailyWord,answer,result
+local data
+local result
 local hintStr=""
 local lastGuess
-local history,rawHistory,historyMap
-local scroll=0
-local records={'-','-','-','-','-'}
-local recordStr="Records:---- -"
+local history
 local lastSureTime=-1e99
-
-local sortFuncNames={'rate_des','rate_asc','id_asc','id_des','word_asc'}
-local sortFuncs={
-    rate_des=function(a,b)
-        return a._score>b._score or a._score==b._score and a.word<b.word
-    end,
-    rate_asc=function(a,b)
-        return a._score<b._score or a._score==b._score and a.word>b.word
-    end,
-    id_des=function(a,b)
-        return a.id>b.id
-    end,
-    id_asc=function(a,b)
-        return a.id<b.id
-    end,
-    word_asc=function(a,b)
-        return a.word<b.word
-    end
-}
-local sortMode
-
-local function freshRecord(res)
-    if res then
-        table.insert(records,res)
-    end
-    if #records>5 then
-        table.remove(records,1)
-    end
-    recordStr="Records: "..table.concat(records,"  ")
-end
 
 local function strComp(s1,s2)
     assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
@@ -56,18 +24,12 @@ local function strComp(s1,s2)
         for _=0,1 do -- for swap t1 and t2 then try again
             local n=1
             while true do
-                local d=math.floor(n/2)*(-1) ^ n -- 0,-1,1,-2,2,...
+                local d=math.floor(n/2)*(-1)^n -- 0,-1,1,-2,2,...
                 if d>=len then
                     break
                 end
                 if t1[i]==t2[i+d] then
-                    score=score+Options.matchRateFunc[1](len,d)
-                    -- score=score+1/(math.abs(d)+1) -- Arithmetic typewriter
-                    -- score=score+1-math.abs(d)/len/2 -- Graceful failure
-                    -- score=score+math.max(1-math.abs(d)/3,0) -- Trisected principle
-                    -- score=score+0 -- ?
-                    -- score=score+0 -- ?
-                    -- ? -- stable maintenance
+                    score=score+Options.matchRateFunc[data.model](len,d)
                     break
                 end
                 n=n+1
@@ -88,21 +50,6 @@ local function getSimilarity(w1,w2)
     return maxSimilarity
 end
 
-local function restart()
-    inputBox:setText('')
-    scene.widgetList[4]._visible=false
-    scene.widgetList[5]._visible=true
-    lastGuess=nil
-
-    result=false
-    history={}
-    historyMap={}
-    rawHistory={}
-
-    sortMode='rate_des'
-    scroll=0
-end
-
 local function guess(w,giveup,auto)
     if #w==0 then
         MSG.new('info',"Input in a English word then press enter")
@@ -112,69 +59,52 @@ local function guess(w,giveup,auto)
         MSG.new('info',"Word \""..w.."\" doesn't exist")
         return
     end
-    if historyMap[w] then
+    if history[w] then
         MSG.new('info',"Already guessed that word!")
         return
     end
 
-    if #history==0 then
-        scene.widgetList[4]._visible=true
-        scene.widgetList[5]._visible=false
-    end
-
     local _score,info
-    if #w<=#answer/2 or #w>=#answer*2 then
+    if #w<=#data.word/2 or #w>=#data.word*2 then
         _score=-1
         info="X"
     else
-        _score=MATH.clamp(getSimilarity(answer,w),-1,1)
+        _score=MATH.clamp(getSimilarity(data.word,w),-1,1)
         if giveup and _score==1 then
             info="Give Up"
-            if answer~=dailyWord or #history==0 then
+            if #history==0 then
                 result='gaveup'
-                if not auto and #history>0 then
-                    freshRecord("X")
-                end
+                -- TODO: give up
             end
         else
             info=string.format("%.2f%%",100*_score)
             if _score==1 then
                 result='win'
-                if answer==dailyWord then
-                    MSG.new('info',"Daily puzzle solved!")
-                else
-                    if not auto then
-                        freshRecord(#history+1)
-                        MSG.new('info',"You got it right!")
-                    end
+                if not auto then
+                    -- TODO: win
+                    MSG.new('info',"You got it right!")
                 end
             end
         end
     end
     lastGuess={id=#history+1,word=w,_score=_score,info=info}
     table.insert(history,lastGuess)
-    table.insert(rawHistory,w)
-    scroll=0
 
-    historyMap[w]=true
-
-    if not auto then
-        table.sort(history,sortFuncs[sortMode])
-    end
     return true
 end
 
 function scene.enter()
-    restart()
+    data=TABLE.copy(SCN.args[1])
+    result=false
+
+    inputBox:setText('')
+    history={}
+    lastGuess=nil
 end
 
 function scene.resize()
     inputBox.w=SCR.w/SCR.k-60
     inputBox:reset()
-end
-
-function scene.wheelMoved(x,y)
-    scroll=math.max(0,math.min(scroll-(x+y),#history-15)) -- #history-15 may larger than 15,so cannot use MATH.clamp
 end
 
 local floatY=0
@@ -196,15 +126,42 @@ function scene.keyDown(key,isRep)
     elseif key=='=' then
         if isRep then return end
         if result then return end
-        if answer==dailyWord then
-            MSG.new('info','Never gonna give~you~up')
+        if love.timer.getTime()-lastSureTime<1 then
+            guess(data.word,true)
         else
-            if love.timer.getTime()-lastSureTime<1 then
-                guess(answer,true)
-            else
-                MSG.new('warn','Press again to give up')
+            MSG.new('warn','Press again to give up')
+        end
+        lastSureTime=love.timer.getTime()
+    elseif key=='c' and love.keyboard.isDown('lctrl','rctrl') then
+        if data.fixed then
+            MSG.new('info',"Can't export code in this mode")
+            return
+        else
+            -- print("word: "..data.word)
+            -- print("lib: "..data.lib)
+            -- print("len: "..data.len)
+            -- print("model: "..data.model)
+            local id=TABLE.find(WordLib[data.lib],data.word)
+            -- print("id: "..id)
+            local abc=0
+            while not ABC[id] do
+                abc=abc+385
+                id=id-240
             end
-            lastSureTime=love.timer.getTime()
+            abc=abc+ABC[id]
+            -- print("abc: "..abc)
+
+            local pid=1547
+            local p
+            repeat
+                pid=pid+1
+                p=Primes[pid]*abc
+            until p%5==data.lib and p%7==data.len and p%11==data.model
+            -- print("find prime: "..Primes[pid])
+            -- print("result: "..p)
+            -- print(string.format("hex: %x",p))
+            love.system.setClipboardText(string.format("%x",p))
+            MSG.new('check',"Riddle code copied to clipboard!")
         end
     elseif key=='escape' then
         if isRep then return end
@@ -240,30 +197,10 @@ end
 function scene.draw()
     gc.replaceTransform(SCR.xOy_ul)
 
-    -- Arrow
-    FONT.set(40)
-    gc.setColor(COLOR.L)
-    if history[scroll] then
-        gc.print('↑',7,130)
-    end
-    if history[scroll+16] then
-        gc.print('↓',7,530)
-    end
-
-    -- Draw records
-    if answer~=dailyWord then
-        FONT.set(20)
-        gc.printf(recordStr,SCR.w/SCR.k-1100,85,1000,'right')
-    end
-
     -- Dividing line and sorting mode
     gc.setLineWidth(3)
-    if answer==dailyWord then
-        gc.setColor(COLOR.lY)
-    end
     gc.line(28,125,SCR.w/SCR.k-100,125)
     FONT.set(15)
-    gc.print(sortMode,SCR.w/SCR.k-90,113)
     gc.printf(hintStr,SCR.w/SCR.k-626,140,600,'right')
 
     -- Draw words
@@ -271,11 +208,11 @@ function scene.draw()
     if lastGuess then
         drawWord(lastGuess,-.5)
     end
-    for i=scroll+1,math.min(scroll+15,#history) do
-        drawWord(history[i],i-scroll)
-    end
 end
 
-scene.widgetList={inputBox,WIDGET.new{type='button',pos={1,1},text='Sort',x=-70,y=-50,w=120,h=80,code=WIDGET.c_pressKey'tab'},WIDGET.new{type='button',pos={1,1},text='Give up',x=-200,y=-50,w=120,h=80,code=WIDGET.c_pressKey'='},WIDGET.new{type='button',pos={1,1},text='Restart',x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'escape'},WIDGET.new{type='button',pos={1,1},text='Daily',color='lY',x=-330,y=-50,w=120,h=80,code=WIDGET.c_pressKey'-'}}
+scene.widgetList={
+    inputBox,
+    WIDGET.new{type='button',pos={1,1},text='Give up',x=-180,y=-50,w=150,h=80,code=WIDGET.c_pressKey'='},
+}
 
 return scene
