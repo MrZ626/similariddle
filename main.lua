@@ -19,7 +19,11 @@ SCN.setDefaultSwap('fastFade')
 FONT.setDefaultFont('main')
 FONT.load('main','codePixel Regular.ttf')
 
+WIDGET._prototype.base._hoverTimeMax=0.01
+WIDGET._prototype.base._pressTimeMax=0.01
 WIDGET._prototype.button.cornerR=0
+WIDGET._prototype.slider.cornerR=0
+WIDGET._prototype.slider._approachSpeed=260
 
 --[[题目代码生成流程：
     ace
@@ -31,29 +35,6 @@ WIDGET._prototype.button.cornerR=0
     找到13000以上的大指数p*X使得mod ABC分别是游戏参数
     输出hex(n*X)
 ]]
-
--- Options
-Options={
-    name={
-        lib={'CET4','CET6','TEM8','GRE'},
-        len={'Short','Medium','Long','Loooooong'},
-        model={'Easy','Medium','Hard','Extreme','Hell'},
-    },
-    lengthLevel={
-        {4,6},
-        {7,9},
-        {10,12},
-        {13,62},
-    },
-    matchRateFunc={
-        function(len,d) return 1/(math.abs(d)+1) end, -- Arithmetic typewriter
-        function(len,d) return 1-math.abs(d)/len/2 end, -- Graceful failure
-        function(len,d) return math.max(1-math.abs(d)/3,0) end, -- Trisected principle
-        function(len,d) return 0 end, -- stable maintenance
-        function(len,d) return 0 end, -- stable maintenance
-        function(len,d) return 0 end, -- stable maintenance
-    },
-}
 
 -- Load data
 Primes={2} do
@@ -80,6 +61,77 @@ end
 collectgarbage()
 
 -- Game functions
+local ratingModelFunc={
+    function(len,d) return math.max(1-math.abs(d)/3,0) end, -- Trisected principle
+    function(len,d) return 1/(math.abs(d)+1) end, -- Arithmetic typewriter
+    function(len,d) return 0 end, -- Pirates' ship
+    NULL, -- Weaving logic
+    function(len,d) return 1-math.abs(d)/len/2 end, -- Graceful failure
+    function(len,d) return 0 end, -- Stable maintenance
+}
+local function combMatch(model,s1,s2)
+    assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
+    local len=#s1
+    local t1,t2={},{}
+    for i=1,len do
+        t1[i]=s1:sub(i,i)
+        t2[i]=s2:sub(i,i)
+    end
+    local score=0
+    for i=1,len do
+        for _=0,1 do -- for swap t1 and t2 then try again
+            local n=1
+            while true do
+                local d=math.floor(n/2)*(-1)^n -- 0,-1,1,-2,2,...
+                if d>=len then
+                    break
+                end
+                if t1[i]==t2[i+d] then
+                    score=score+ratingModelFunc[model](len,d)
+                    break
+                end
+                n=n+1
+            end
+            t1,t2=t2,t1
+        end
+    end
+    return score/len/2
+end
+local function editDist(s1,s2)-- By Copilot
+    local len1,len2=#s1,#s2
+    local t1,t2={},{}
+    for i=1,len1 do t1[i]=s1:sub(i,i) end
+    for i=1,len2 do t2[i]=s2:sub(i,i) end
+    local dp={}
+    for i=0,len1 do dp[i]=TABLE.new(0,len2) end dp[0][0]=0
+    for i=1,len1 do dp[i][0]=i end
+    for i=1,len2 do dp[0][i]=i end
+    for i=1,len1 do for j=1,len2 do
+        dp[i][j]=t1[i]==t2[j] and dp[i-1][j-1] or math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1
+    end end
+    return dp[len1][len2]
+end
+function GetSimilarity(model,w1,w2)
+    if model==4 then
+        local dist=editDist(w1,w2)
+        return 1-(dist/#w1+dist/#w2)/2
+    else
+        local maxSimilarity=-1e99
+        local short,long=#w1<#w2 and w1 or w2,#w1<#w2 and w2 or w1
+
+        for i=1,#long-#short+1 do
+            maxSimilarity=math.max(maxSimilarity,combMatch(model,short,long:sub(i,i+#short-1))-(#long-#short)/#long)
+        end
+        return maxSimilarity
+    end
+end
+
+local LengthLevel={
+    {4,6},
+    {7,9},
+    {10,12},
+    {13,62},
+}
 function NewGame_fixed(word,lib,len,model)
     SCN.go('play',nil,{
         fixed=true,
@@ -95,7 +147,7 @@ function NewGame(lib,len,model)
     local word
     repeat
         word=wordLib[math.random(1,#wordLib)]
-    until #word>=Options.lengthLevel[len][1] and #word<=Options.lengthLevel[len][2]
+    until #word>=LengthLevel[len][1] and #word<=LengthLevel[len][2]
     SCN.go('play',nil,{
         fixed=false,
         word=word,

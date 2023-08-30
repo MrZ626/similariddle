@@ -11,45 +11,6 @@ local lastGuess
 local history
 local lastSureTime=-1e99
 
-local function strComp(s1,s2)
-    assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
-    local len=#s1
-    local t1,t2={},{}
-    for i=1,len do
-        t1[i]=s1:sub(i,i)
-        t2[i]=s2:sub(i,i)
-    end
-    local score=0
-    for i=1,len do
-        for _=0,1 do -- for swap t1 and t2 then try again
-            local n=1
-            while true do
-                local d=math.floor(n/2)*(-1)^n -- 0,-1,1,-2,2,...
-                if d>=len then
-                    break
-                end
-                if t1[i]==t2[i+d] then
-                    score=score+Options.matchRateFunc[data.model](len,d)
-                    break
-                end
-                n=n+1
-            end
-            t1,t2=t2,t1
-        end
-    end
-    return score/len/2
-end
-
-local function getSimilarity(w1,w2)
-    local maxSimilarity=-1e99
-    local short,long=#w1<#w2 and w1 or w2,#w1<#w2 and w2 or w1
-
-    for i=1,#long-#short+1 do
-        maxSimilarity=math.max(maxSimilarity,strComp(short,long:sub(i,i+#short-1))-(#long-#short)/#long)
-    end
-    return maxSimilarity
-end
-
 local function guess(w,giveup,auto)
     if #w==0 then
         MSG.new('info',"Input in a English word then press enter")
@@ -69,7 +30,7 @@ local function guess(w,giveup,auto)
         _score=-1
         info="X"
     else
-        _score=MATH.clamp(getSimilarity(data.word,w),-1,1)
+        _score=MATH.clamp(GetSimilarity(data.model,data.word,w),-1,1)
         if giveup and _score==1 then
             info="Give Up"
             if #history==0 then
