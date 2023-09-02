@@ -1,4 +1,5 @@
 local gc=love.graphics
+local ins=table.insert
 
 local scene={}
 
@@ -6,12 +7,11 @@ local inputBox=WIDGET.new{type='inputBox',pos={0,0},x=30,y=20,w=1000-60,h=50,reg
 
 local data
 local result
-local hintStr=""
 local lastGuess
-local history
+local history,viewHistory
 local lastSureTime=-1e99
 
-local function guess(w,giveup,auto)
+local function guess(w,giveup)
     if #w==0 then
         MSG.new('info',"Input in a English word then press enter")
         return
@@ -21,35 +21,36 @@ local function guess(w,giveup,auto)
         return
     end
     if history[w] then
-        MSG.new('info',"Already guessed that word!")
+        lastGuess=history[w]
+        -- MSG.new('info',"Already guessed that word!")
         return
     end
 
-    local _score,info
+    local score,info
     if #w<=#data.word/2 or #w>=#data.word*2 then
-        _score=-1
+        score=-1
         info="X"
     else
-        _score=MATH.clamp(GetSimilarity(data.model,data.word,w),-1,1)
-        if giveup and _score==1 then
-            info="Give Up"
-            if #history==0 then
+        score=MATH.clamp(GetSimilarity(data.model,data.word,w),-1,1)
+        info=string.format("%.2f%%",100*score)
+        if score==1 then
+            if giveup then
                 result='gaveup'
                 -- TODO: give up
-            end
-        else
-            info=string.format("%.2f%%",100*_score)
-            if _score==1 then
+                info="Give Up"
+            else
                 result='win'
-                if not auto then
-                    -- TODO: win
-                    MSG.new('info',"You got it right!")
-                end
+                -- TODO: win
+                MSG.new('check',"You got it right!")
             end
         end
     end
-    lastGuess={id=#history+1,word=w,_score=_score,info=info}
-    table.insert(history,lastGuess)
+    local id=#history+1
+    lastGuess={id=id,word=w,score=score,info=info}
+    history[id]=lastGuess -- [number]
+    history[w]=lastGuess -- [string]
+    ins(viewHistory[1],lastGuess)
+    ins(viewHistory[2],lastGuess)
 
     return true
 end
@@ -60,21 +61,13 @@ function scene.enter()
 
     inputBox:setText('')
     history={}
+    viewHistory={{},{}}
     lastGuess=nil
 end
 
 function scene.resize()
     inputBox.w=SCR.w/SCR.k-60
     inputBox:reset()
-end
-
-local floatY=0
-function scene.touchMove(_,_,_,dy)
-    floatY=floatY+dy
-    if math.abs(floatY)>20 then
-        scene.wheelMoved(0,MATH.sign(floatY))
-        floatY=floatY-MATH.sign(floatY)*20
-    end
 end
 
 function scene.keyDown(key,isRep)
@@ -147,33 +140,24 @@ function scene.keyDown(key,isRep)
     end
 end
 
-local function drawWord(w,h)
-    gc.setColor(COLOR.L)
-    gc.print(w.id,45,95+h*30)
-    gc.print(w.word,170,95+h*30)
-    gc.setColor(1-w._score,1+w._score,1-math.abs(w._score))
-    gc.print(w.info,450,95+h*30)
-end
-
 function scene.draw()
     gc.replaceTransform(SCR.xOy_ul)
-
-    -- Dividing line and sorting mode
-    gc.setLineWidth(3)
-    gc.line(28,125,SCR.w/SCR.k-100,125)
-    FONT.set(15)
-    gc.printf(hintStr,SCR.w/SCR.k-626,140,600,'right')
 
     -- Draw words
     FONT.set(30)
     if lastGuess then
-        drawWord(lastGuess,-.5)
+        gc.setColor(COLOR.L)
+        gc.print(lastGuess.id,45,95)
+        gc.print(lastGuess.word,170,95)
+        gc.setColor(1-lastGuess.score,1+lastGuess.score,1-math.abs(lastGuess.score))
+        gc.print(lastGuess.info,450,95)
     end
 end
 
 scene.widgetList={
     inputBox,
-    WIDGET.new{type='button',pos={1,1},text='Give up',x=-180,y=-50,w=150,h=80,code=WIDGET.c_pressKey'='},
+    WIDGET.new{type='button_fill',pos={1,1},text='Give up',x=-210,y=-40,w=130,h=70,fontSize=20,code=WIDGET.c_pressKey'='},
+    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-70,y=-40,w=130,h=70,fontSize=30,code=WIDGET.c_pressKey'escape'},
 }
 
 return scene

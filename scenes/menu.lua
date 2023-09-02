@@ -11,6 +11,17 @@ end
 
 local scene={}
 
+function scene.keyDown(key,isRep)
+    if isRep then return end
+    if key=='escape' then
+        if TASK.lock('sureBack',1) then
+            MSG.new('info',"Press again to quit",1)
+        else
+            Zenitha._quit('fade')
+        end
+    end
+end
+
 function scene.draw()
     FONT.set(80)
     GC.mStr(TitleString,500,120)
@@ -21,5 +32,6 @@ end
 scene.widgetList={
     WIDGET.new{type='button_fill',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=playDaily},
     WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
+    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-70,y=-40,w=130,h=70,fontSize=30,code=WIDGET.c_pressKey'escape'},
 }
 return scene
