@@ -6,14 +6,14 @@ Zenitha.setFirstScene('menu')
 Zenitha.setMaxFPS(40) -- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
-Zenitha.setOnFnKeys({NULL, NULL, NULL, NULL, NULL, NULL, love._openConsole})
+Zenitha.setOnFnKeys({NULL,NULL,NULL,NULL,NULL,NULL,love._openConsole})
 
 love.keyboard.setKeyRepeat(true)
 if MOBILE then
     love.window.setFullscreen(true)
 end
 
-SCR.setSize(1000, 600)
+SCR.setSize(1000,600)
 SCN.setDefaultSwap('none')
 
 FONT.setDefaultFont('main')
@@ -81,14 +81,14 @@ local function combMatch(model,s1,s2)
     local modelFunc=ratingModelFunc[model]
     for i=1,len do
         for _=0,1 do -- for swap t1 and t2 then try again
-            local n=1
+            local n=0
             while true do
-                local d=math.floor(n/2)*(-1)^n -- 0,-1,1,-2,2,...
-                if d>=len then
+                n=n<1 and -n+1 or -n -- (0,) -1,1,-2,2,...
+                if n>=len then
                     break
                 end
-                if t1[i]==t2[i+d] then
-                    score=score+modelFunc(len,d)
+                if t1[i]==t2[i+n] then
+                    score=score+modelFunc(len,n)
                     break
                 end
                 n=n+1
@@ -216,9 +216,9 @@ repeat
 until FakeTitleString~=TitleString
 
 -- Load scene files from SOURCE ONLY
-for _, v in next, love.filesystem.getDirectoryItems('scenes') do
+for _,v in next,love.filesystem.getDirectoryItems('scenes') do
     if FILE.isSafe('scenes/' .. v) then
-        local sceneName=v:sub(1, -5)
-        SCN.add(sceneName, require('scenes.' .. sceneName))
+        local sceneName=v:sub(1,-5)
+        SCN.add(sceneName,require('scenes.' .. sceneName))
     end
 end
