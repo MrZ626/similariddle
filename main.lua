@@ -14,7 +14,7 @@ if MOBILE then
 end
 
 SCR.setSize(1000, 600)
-SCN.setDefaultSwap('fastFade')
+SCN.setDefaultSwap('none')
 
 FONT.setDefaultFont('main')
 FONT.load('main','codePixel Regular.ttf')
@@ -78,6 +78,7 @@ local function combMatch(model,s1,s2)
         t2[i]=s2:sub(i,i)
     end
     local score=0
+    local modelFunc=ratingModelFunc[model]
     for i=1,len do
         for _=0,1 do -- for swap t1 and t2 then try again
             local n=1
@@ -87,17 +88,17 @@ local function combMatch(model,s1,s2)
                     break
                 end
                 if t1[i]==t2[i+d] then
-                    score=score+ratingModelFunc[model](len,d)
+                    score=score+modelFunc(len,d)
                     break
                 end
                 n=n+1
             end
-            t1,t2=t2,t1
+            t1,t2=t2,t1 -- swap
         end
     end
     return score/len/2
 end
-local function editDist(s1,s2)-- By Copilot
+local function editDist(s1,s2) -- By Copilot
     local len1,len2=#s1,#s2
     local t1,t2={},{}
     for i=1,len1 do t1[i]=s1:sub(i,i) end
