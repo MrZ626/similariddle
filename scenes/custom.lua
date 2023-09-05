@@ -21,7 +21,7 @@ scene.widgetList={
     WIDGET.new{type='slider',x=250,y=380,w=500,axis={1,5,1},labelDistance=40,textAlwaysShow=true,disp=function() return model end,valueShow=function(s) return optionNames.model[s._pos0] end,code=function(i) model=i end},
     WIDGET.new{type='button_fill',x=150,y=500,w=80,fontSize=25,color='lB',text="Code",code=function()
         local code=love.system.getClipboardText()
-        if code then code=STRING.trim(code) end
+        if code then code=code:trim() end
         if not pcall(PlayFromCode,code) then
             MSG.new('error',"Invalid riddle code: "..(code and #code>0 and code or "?"),1)
         end

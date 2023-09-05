@@ -13,6 +13,7 @@ if MOBILE then
     love.window.setFullscreen(true)
 end
 
+STRING.install()
 SCR.setSize(1000,600)
 SCN.setDefaultSwap('none')
 
@@ -48,15 +49,23 @@ Primes={2} do
 end
 ABC={} for i=1,385 do if i%5~=0 and i%7~=0 and i%11~=0 then table.insert(ABC,i) end end
 WordLib={
-    STRING.split(FILE.load('lib_cet4.txt','-string'),'\r\n'),
-    STRING.split(FILE.load('lib_cet6.txt','-string'),'\r\n'),
-    STRING.split(FILE.load('lib_tem8.txt','-string'),'\r\n'),
-    STRING.split(FILE.load('lib_gre.txt','-string'),'\r\n'),
-    FULL=STRING.split(FILE.load('lib_full.txt','-string'),'\r\n'),
+    FILE.load('lib_cet4.txt','-string'):split('\r\n'),
+    FILE.load('lib_cet6.txt','-string'):split('\r\n'),
+    FILE.load('lib_tem8.txt','-string'):split('\r\n'),
+    FILE.load('lib_gre.txt', '-string'):split('\r\n'),
+    FILE.load('lib_full.txt','-string'):split('\r\n'),
 }
 WordHashMap={}
-for name,lib in next,WordLib do
-    for i=1,#lib do WordHashMap[lib[i]]=name end
+AnswerWordList={}-- Temp list, for sorting by simmilarity
+for libID,lib in next,WordLib do
+    for i=1,#lib do
+        if not WordHashMap[lib[i]] then
+            WordHashMap[lib[i]]=libID
+            if libID<5 then
+                table.insert(AnswerWordList,{lib[i]})
+            end
+        end
+    end
 end
 collectgarbage()
 
