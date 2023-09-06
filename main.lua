@@ -92,15 +92,15 @@ local function combMatch(model,s1,s2)
         for _=0,1 do -- for swap t1 and t2 then try again
             local n=0
             while true do
-                n=n<1 and -n+1 or -n -- (0,) -1,1,-2,2,...
-                if n>=len then
-                    break
-                end
                 if t1[i]==t2[i+n] then
+                    if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
                     score=score+modelFunc(len,n)
                     break
                 end
-                n=n+1
+                n=n<1 and -n+1 or -n -- 0,-1,1,-2,2,...
+                if n>=len then
+                    break
+                end
             end
             t1,t2=t2,t1 -- swap
         end

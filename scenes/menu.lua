@@ -3,7 +3,7 @@ local function playDaily()
     math.randomseed(day)
     for _=1,26 do math.random() end
     local lib=MATH.randFreq{7,2,1,0}
-    local len=MATH.randFreq{3,5,4,3}
+    local len=MATH.randFreq{6,10,3,1}
     local model=MATH.randFreq{6,4,3,2,1}
     local wordLib=WordLib[lib]
     local word=wordLib[math.random(1,#wordLib)]
@@ -33,6 +33,6 @@ end
 scene.widgetList={
     WIDGET.new{type='button_fill',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=playDaily},
     WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
-    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-70,y=-40,w=130,h=70,fontSize=30,code=WIDGET.c_pressKey'escape'},
+    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
 }
 return scene

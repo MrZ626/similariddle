@@ -1,53 +1,64 @@
 --- @class guess
 --- @field id number
 --- @field word string
+--- @field length number
 --- @field score number
 --- @field info string
---- @field color Zenitha.Color
---- @field idFont number
+--- @field rank string?
 --- @field textObj love.Text
+--- @field bgColor Zenitha.Color
+--- @field rankColor Zenitha.Color
+--- @field idFont number
 
+local GC=GC
 local gc=love.graphics
 local gc_setColor,gc_setLineWidth=gc.setColor,gc.setLineWidth
 local gc_draw,gc_line=gc.draw,gc.line
 local gc_rectangle,gc_circle=gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
 local getFont,setFont=FONT.get,FONT.set
-
 local ins=table.insert
 
-local scene={}
+local methodName={"score","id","word","length"}
+local dirName={"ascend","descend"}
+
+local defaultSortMethod={
+    {
+        {"score","descend"},
+        {"word","ascend"},
+    },
+    {
+        {"id","descend"},
+        {"word","ascend"},
+    }
+}
 
 local wordW,wordH
+local side=3
 --- @param item guess
 local function listDrawFunc(item)
-    gc_setColor(item.color)
-    gc_rectangle('fill',3,3,wordW-6,wordH-6)
+    gc_setColor(item.bgColor)
+    gc_rectangle('fill',side,side,wordW-side*2,wordH-side*2)
     gc_setColor(COLOR.L)
     setFont(item.idFont)
     gc_print(item.id,6,3)
     if item.rank then
         setFont(10)
+        gc_setColor(item.rankColor)
         gc_print(item.rank,6,21)
     end
 
-    local l=#item.word
     local t=item.textObj
+    local l=#item.word
     local k=math.log(l,2.6)/l*3
     local anchorY=t:getHeight()*.47
+    gc_setColor(COLOR.L)
     gc_draw(t,30,wordH/2,nil,k,nil,0,anchorY)
     gc_draw(t,30.5,wordH/2,nil,k,nil,0,anchorY)
 
     setFont(20)
     gc_printf(item.info,0,8,wordW-5,'right')
 end
-
---- @type Zenitha.widget.inputBox
-local inputBox=WIDGET.new{type='inputBox',pos={0,0},regex='[a-z]',lineWidth=2}
---- @type Zenitha.widget.listBox
-local hisBox1=WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2}
---- @type Zenitha.widget.listBox
-local hisBox2=WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2}
 
 --- @type table current game's params (word & settings)
 local data
@@ -60,7 +71,32 @@ local lastGuess
 --- @type table<number|string,guess>
 local history
 --- @type table<table<guess>>
-local viewHistory
+local viewHistory={}
+
+local hisSortMethods={}
+local hisViewCount=2
+
+local hisSortMethod
+local function hisSortFunc(g1,g2)
+    for j=1,#hisSortMethod do
+        local v1,v2=g1[hisSortMethod[j][1]],g2[hisSortMethod[j][1]]
+        if v1~=v2 then
+            return v1<v2==(hisSortMethod[j][2]=="ascend")==(hisSortMethod[j][1]=="score")
+        end
+    end
+    return true
+end
+--- @param guess guess?
+--- @param id number?
+local function updateViewHis(guess,id)
+    for i=1,hisViewCount do
+        if not id or i==id then
+            if guess then ins(viewHistory[i],guess) end
+            hisSortMethod=hisSortMethods[i]
+            table.sort(viewHistory[i],hisSortFunc)
+        end
+    end
+end
 
 local function guess(w,giveup)
     if #w==0 then
@@ -74,7 +110,7 @@ local function guess(w,giveup)
     if history[w] then
         lastGuess=history[w]
         -- MSG.new('info',"Already guessed that word!",0.5)
-        return
+        return true
     end
 
     local score,info
@@ -97,30 +133,86 @@ local function guess(w,giveup)
         end
     end
     local id=#history+1
+    local rank,rankColor
+    if wordRankHashtable[w] then
+        rank=wordRankHashtable[w]<1000 and wordRankHashtable[w] or math.floor(wordRankHashtable[w]/1000).."k"
+        rankColor=COLOR.L
+    else
+        local l,r=1,#AnswerWordList
+        while l<r do
+            local m=math.floor((l+r)/2)
+            if score<AnswerWordList[m][2] then
+                l=m+1
+            else
+                r=m
+            end
+        end
+        rank=l<1000 and l or math.floor(l/1000).."k"
+        rankColor=COLOR.LD
+    end
     lastGuess={
-        id=id,word=w,score=score,
+        id=id,
+        word=w,
+        length=#w,
+        score=score,
         info=info,
-        color={1-score,1+score,1-math.abs(score),.26},
-        rank=wordRankHashtable[w] and (wordRankHashtable[w]<1000 and wordRankHashtable[w] or math.floor(wordRankHashtable[w]/1000).."k"),
-        idFont=id<100 and 15 or id<1000 and 10 or 7,
+        rank=rank,
         textObj=gc.newText(getFont(25),w),
+        bgColor={1-score,1+score,1-math.abs(score),.26},
+        rankColor=rankColor,
+        idFont=id<100 and 15 or id<1000 and 10 or 7,
     }
     history[id]=lastGuess -- [number]
     history[w]=lastGuess -- [string]
-    ins(viewHistory[1],lastGuess)
-    ins(viewHistory[2],lastGuess)
+    updateViewHis(lastGuess,nil)
 
     return true
 end
+
+--- @type Zenitha.widget.inputBox
+local inputBox=WIDGET.new{type='inputBox',pos={0,0},regex='[a-z]',maxInputLength=41,lineWidth=2}
+--- @type Zenitha.widget.listBox,Zenitha.widget.listBox
+local hisBox1,hisBox2=
+    WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2,scrollBarWidth=4,scrollBarPos='right'},
+    WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2,scrollBarWidth=4,scrollBarPos='right'}
+
+local hisType1,hisDir1,hisType2,hisDir2
+local function setSortTitle(i,mode)
+    hisSortMethods[i][1][1]=mode
+    local btn=i==1 and hisType1 or hisType2
+    btn.text=hisSortMethods[i][1][1]
+    updateViewHis(nil,i)
+    btn:reset()
+end
+local function setSortDir(i,mode)
+    hisSortMethods[i][1][2]=mode
+    local btn=i==1 and hisDir1 or hisDir2
+    btn.text=hisSortMethods[i][1][2]=="ascend" and "↑" or "↓"
+    updateViewHis(nil,i)
+    btn:reset()
+end
+--- @type Zenitha.widget.button
+hisType1=WIDGET.new{type='button',pos={0,0},fontSize=25,code=function() setSortTitle(1,TABLE.next(methodName,hisSortMethods[1][1][1])) end,lineWidth=2}
+--- @type Zenitha.widget.button
+hisDir1=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(1,TABLE.next(dirName,hisSortMethods[1][1][2])) end,lineWidth=2}
+--- @type Zenitha.widget.button
+hisType2=WIDGET.new{type='button',pos={0,0},fontSize=25,code=function() setSortTitle(2,TABLE.next(methodName,hisSortMethods[2][1][1])) end,lineWidth=2}
+--- @type Zenitha.widget.button
+hisDir2=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(2,TABLE.next(dirName,hisSortMethods[2][1][2])) end,lineWidth=2}
+
+local scene={}
 
 function scene.enter()
     data=TABLE.copy(SCN.args[1])
     -- for k,v in next,data do print(k,v)end
     result=false
 
-    history={}
-    viewHistory={{},{}}
     lastGuess=nil
+    history={}
+    for i=1,hisViewCount do
+        viewHistory[i]={}
+        hisSortMethods[i]=TABLE.shift(defaultSortMethod[i])
+    end
 
     local model,word=data.model,data.word
     local clamp=MATH.clamp
@@ -136,8 +228,12 @@ function scene.enter()
         prev=cur
     end
     collectgarbage()
-    for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+    -- for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
 
+    setSortTitle(1,"score")
+    setSortDir(1,"descend")
+    setSortTitle(2,"id")
+    setSortDir(2,"descend")
     inputBox:setText('')
     hisBox1:setList(viewHistory[1])
     hisBox2:setList(viewHistory[2])
@@ -154,19 +250,30 @@ function scene.resize()
     local fullHeight=SCR.h/SCR.k
 
     local hisX,hisY=0,120
-    local hisW,hisH=fullWidth*0.7,fullHeight-120
+    local hisBtnH=50
+    local hisW,hisH=fullWidth*0.7,fullHeight-120-hisBtnH
     local gap=15
     -- hisBox's size: 270~400, 35
     wordW,wordH=hisW/2-gap*1.5,35
 
-    inputBox.x,inputBox.y,inputBox.w,inputBox.h=gap*0.9,gap*0.9,fullWidth-0.9*2*gap,50
+    inputBox.x,inputBox.y,inputBox.w,inputBox.h=gap*1.2,gap*0.9+5,fullWidth-1.2*2*gap,40
     hisBox1.x,hisBox1.y,hisBox1.w,hisBox1.h=hisX+gap,hisY+gap,wordW,hisH-2*gap
     hisBox2.x,hisBox2.y,hisBox2.w,hisBox2.h=hisX+gap+hisW/2,hisY+gap,wordW,hisH-2*gap
-
-
+    hisType1.x,hisType1.y,hisType1.w,hisType1.h=
+        (hisX+gap+wordW)/2-(hisW/6+hisBtnH+gap/2)/2+hisW/6/2,
+        hisY+hisH+hisBtnH/2-gap/2,
+        hisW/6,
+        hisBtnH
+    hisDir1.x,hisDir1.y,hisDir1.w,hisDir1.h=
+        (hisX+gap+wordW)/2+(hisW/6+hisBtnH+gap/2)/2-hisBtnH/2,
+        hisY+hisH+hisBtnH/2-gap/2,
+        hisBtnH,
+        hisBtnH
+    hisType2.x,hisType2.y,hisType2.w,hisType2.h=hisType1.x+hisW/2,hisType1.y,hisType1.w,hisType1.h
+    hisDir2.x,hisDir2.y,hisDir2.w,hisDir2.h=hisDir1.x+hisW/2,hisDir1.y,hisDir1.w,hisDir1.h
     inputBox:reset()
-    hisBox1:reset()
-    hisBox2:reset()
+    hisBox1:reset() hisType1:reset() hisDir1:reset()
+    hisBox2:reset() hisType2:reset() hisDir2:reset()
 end
 
 function scene.keyDown(key,isRep)
@@ -227,13 +334,29 @@ function scene.keyDown(key,isRep)
             SCN.back()
         end
     elseif key=='up' then
-        -- scene.wheelMoved(0,1)
+        if love.keyboard.isDown('lctrl','rctrl') then
+            hisBox1:scroll(10,0)
+        elseif love.keyboard.isDown('lalt','ralt') then
+            hisBox2:scroll(10,0)
+        else
+            inputBox:setText(lastGuess and lastGuess.word or '')
+        end
     elseif key=='down' then
-        -- scene.wheelMoved(0,-1)
-    elseif key=='home' then
-        -- scene.wheelMoved(0,1e99)
-    elseif key=='end' then
-        -- scene.wheelMoved(0,-1e99)
+        if love.keyboard.isDown('lctrl','rctrl') then
+            hisBox1:scroll(-10,0)
+        elseif love.keyboard.isDown('lalt','ralt') then
+            hisBox2:scroll(-10,0)
+        else
+            inputBox:setText('')
+        end
+    elseif key=='z' and love.keyboard.isDown('lctrl','rctrl') then
+        hisType1.code()
+    elseif key=='x' and love.keyboard.isDown('lctrl','rctrl') then
+        hisDir1.code()
+    elseif key=='z' and love.keyboard.isDown('lalt','ralt') then
+        hisType2.code()
+    elseif key=='x' and love.keyboard.isDown('lalt','ralt') then
+        hisDir2.code()
     elseif key=='left' or key=='right' then
         -- Do nothing
     else
@@ -253,19 +376,41 @@ function scene.draw()
     -- Draw words
     FONT.set(30)
     if lastGuess then
-        gc.setColor(COLOR.L)
-        gc.print(lastGuess.id,45,95)
-        gc.print(lastGuess.word,170,95)
-        gc.setColor(1-lastGuess.score,1+lastGuess.score,1-math.abs(lastGuess.score))
-        gc.print(lastGuess.info,450,95)
+        gc.translate(20,80)
+        local item=lastGuess
+        gc_setColor(COLOR.DL)
+        setFont(10)
+        GC.mStr("ID",40,-7)
+        GC.mStr("Rank",120,-7)
+
+        gc_setColor(COLOR.L)
+        setFont(25)
+        GC.mStr(item.id,40,6)
+        if item.rank then
+            gc_setColor(item.rankColor)
+            GC.mStr(item.rank,120,6)
+        end
+
+        local t=item.textObj
+        local l=#item.word
+        local k=math.log(l,2.6)/l*4
+        local anchorY=t:getHeight()*.5
+        gc_setColor(COLOR.L)
+        gc_draw(t,180,18,nil,k,nil,0,anchorY)
+        gc_draw(t,180.5,18,nil,k,nil,0,anchorY)
+
+        gc_setColor(item.bgColor)
+        GC.setAlpha(1)
+        gc_print(item.info,550,6)
     end
 end
 
 scene.widgetList={
-    inputBox,hisBox1,
-    -- hisBox2,
+    inputBox,
+    hisBox1,hisType1,hisDir1,
+    hisBox2,hisType2,hisDir2,
     WIDGET.new{type='button_fill',pos={1,1},text='Give up',x=-225,y=-50,w=130,h=70,fontSize=20,code=WIDGET.c_pressKey'='},
-    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-80,y=-50,w=130,h=70,fontSize=30,code=WIDGET.c_pressKey'escape'},
+    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
 }
 
 return scene
