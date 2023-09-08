@@ -4,20 +4,23 @@
 --- @field length number
 --- @field score number
 --- @field info string
---- @field rank string?
+--- @field rank string|number
 --- @field textObj love.Text
 --- @field bgColor Zenitha.Color
 --- @field rankColor Zenitha.Color
 --- @field idFont number
+--- @field wordLight string
+--- @field textObjLight love.Text
 
 local GC=GC
 local gc=love.graphics
+local gc_replaceTransform,gc_translate=gc.replaceTransform,gc.translate
 local gc_setColor,gc_setLineWidth=gc.setColor,gc.setLineWidth
-local gc_draw,gc_line=gc.draw,gc.line
-local gc_rectangle,gc_circle=gc.rectangle,gc.circle
+local gc_draw,gc_rectangle,gc_circle=gc.draw,gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
 local getFont,setFont=FONT.get,FONT.set
 local ins=table.insert
+local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
 local methodName={"score","id","word","length"}
 local dirName={"ascend","descend"}
@@ -48,15 +51,19 @@ local function listDrawFunc(item)
         gc_print(item.rank,6,21)
     end
 
-    local t=item.textObj
+    local t1,t2=item.textObj,item.textObjLight
     local l=#item.word
     local k=math.log(l,2.6)/l*3
-    local anchorY=t:getHeight()*.47
+    local anchorY=t1:getHeight()*.47
     gc_setColor(COLOR.L)
-    gc_draw(t,30,wordH/2,nil,k,nil,0,anchorY)
-    gc_draw(t,30.5,wordH/2,nil,k,nil,0,anchorY)
+    gc_draw(t1,30,wordH/2,nil,k,nil,0,anchorY)
+    gc_draw(t1,30.5,wordH/2,nil,k,nil,0,anchorY)
+    gc_setColor(COLOR.Y)
+    gc_draw(t2,30,wordH/2,nil,k,nil,0,anchorY)
+    gc_draw(t2,30.5,wordH/2,nil,k,nil,0,anchorY)
 
     setFont(20)
+    gc_setColor(COLOR.L)
     gc_printf(item.info,0,8,wordW-5,'right')
 end
 
@@ -75,6 +82,7 @@ local viewHistory={}
 
 local hisSortMethods={}
 local hisViewCount=2
+local lastInput
 
 local hisSortMethod
 local function hisSortFunc(g1,g2)
@@ -86,8 +94,8 @@ local function hisSortFunc(g1,g2)
     end
     return true
 end
---- @param guess guess?
---- @param id number?
+--- @param guess? guess
+--- @param id? number
 local function updateViewHis(guess,id)
     for i=1,hisViewCount do
         if not id or i==id then
@@ -161,6 +169,8 @@ local function guess(w,giveup)
         bgColor={1-score,1+score,1-math.abs(score),.26},
         rankColor=rankColor,
         idFont=id<100 and 15 or id<1000 and 10 or 7,
+        wordLight="",
+        textObjLight=gc.newText(getFont(25),""),
     }
     history[id]=lastGuess -- [number]
     history[w]=lastGuess -- [string]
@@ -204,15 +214,17 @@ local scene={}
 
 function scene.enter()
     data=TABLE.copy(SCN.args[1])
+    -- data.word='significant'
     -- for k,v in next,data do print(k,v)end
-    result=false
 
+    result=false
     lastGuess=nil
     history={}
     for i=1,hisViewCount do
         viewHistory[i]={}
         hisSortMethods[i]=TABLE.shift(defaultSortMethod[i])
     end
+    lastInput=""
 
     local model,word=data.model,data.word
     local clamp=MATH.clamp
@@ -228,7 +240,7 @@ function scene.enter()
         prev=cur
     end
     collectgarbage()
-    -- for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+    for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
 
     setSortTitle(1,"score")
     setSortDir(1,"descend")
@@ -370,8 +382,45 @@ function scene.keyDown(key,isRep)
     end
 end
 
+function scene.update()
+    if TASK.lock("playing_second_check",0.626) and inputBox._value~=lastInput then
+        lastInput=inputBox._value
+        if lastInput=="" then
+            for i=1,#history do
+                local g=history[i]
+                g.wordLight=""
+                g.textObjLight:set("")
+            end
+        else
+            for i=1,#history do
+                local g=history[i]
+                if find(history[i].word,lastInput) then
+                    local w=g.word
+                    local w2=rep(" ",#w)
+                    local j=1
+                    repeat
+                        local s,e=find(w,lastInput,j,true)
+                        if s then
+                            local capture=sub(w,s,e)
+                            w2=paste(w2,capture,s)
+                            j=s+1
+                        else
+                            break
+                        end
+                    until j>#w
+                    g.wordLight=w2
+                    g.textObjLight:set(w2)
+                else
+                    g.wordLight=""
+                    g.textObjLight:set("")
+                end
+            end
+        end
+    end
+end
+
 function scene.draw()
-    gc.replaceTransform(SCR.xOy_ul)
+    gc_replaceTransform(SCR.xOy_ul)
 
     -- Draw words
     FONT.set(30)
@@ -403,6 +452,12 @@ function scene.draw()
         GC.setAlpha(1)
         gc_print(item.info,550,6)
     end
+
+    gc_replaceTransform(SCR.xOy_r)
+    gc_translate(-SCR.w/SCR.k*0.15,0)
+    gc_setLineWidth(2)
+    gc_setColor(COLOR.L)
+    gc_circle('line',0,0,140)-- Max area
 end
 
 scene.widgetList={
