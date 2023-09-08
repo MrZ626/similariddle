@@ -70,14 +70,6 @@ end
 collectgarbage()
 
 -- Game functions
-local ratingModelFunc={
-    function(len,d) return math.max(1-math.abs(d)/3,0) end, -- Trisected principle
-    function(len,d) return 1/(math.abs(d)+1) end, -- Arithmetic typewriter
-    function(len,d) return 0 end, -- Pirates' ship
-    NULL, -- Weaving logic
-    function(len,d) return 1-math.abs(d)/len/2 end, -- Graceful failure
-    function(len,d) return 0 end, -- Stable maintenance
-}
 local function combMatch(model,s1,s2)
     assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
     local len=#s1
@@ -87,14 +79,40 @@ local function combMatch(model,s1,s2)
         t2[i]=s2:sub(i,i)
     end
     local score=0
-    local modelFunc=ratingModelFunc[model]
     for i=1,len do
         for _=0,1 do -- for swap t1 and t2 then try again
             local n=0
             while true do
                 if t1[i]==t2[i+n] then
-                    if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
-                    score=score+modelFunc(len,n)
+                    -- if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
+                    -- score=score+modelFunc(len,n)
+                    if model==1 then
+                        -- Trisected principle
+                        score=score+math.max(1-math.abs(n)/3,0)
+                    elseif model==2 then
+                        -- Arithmetic typewriter
+                        score=score+1/(math.abs(n)+1)
+                    elseif model==3 then
+                        -- Pirate ship
+                        local decay,weight
+                        if i==1 or i==#t1 then
+                            decay,weight=1.5,3
+                        elseif i==2 or i==#t1-1 then
+                            decay,weight=3,2
+                        else
+                            decay,weight=6,1
+                        end
+
+                        score=score+math.max(1-math.abs(n)/decay,0)*weight
+                    elseif model==4 then
+                        -- Weaving logic (not implemented here)
+                    elseif model==5 then
+                        -- Graceful failure
+                        score=score+1-math.abs(n)/len/2
+                    elseif model==6 then
+                        -- Stable maintenance (not designed yet)
+                        score=0
+                    end
                     break
                 end
                 n=n<1 and -n+1 or -n -- 0,-1,1,-2,2,...
