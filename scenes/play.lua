@@ -123,12 +123,12 @@ local function guess(w,giveup)
 
     local score,info
     if #w<=#data.word/2 or #w>=#data.word*2 then
-        score=-1
+        score=-26
         info="X"
     else
-        score=MATH.clamp(GetSimilarity(data.model,data.word,w),-1,1)
+        score=GetSimilarity(data.model,data.word,w)
         info=string.format("%.2f%%",100*score)
-        if score==1 then
+        if w==data.word then
             if giveup then
                 result='gaveup'
                 -- TODO: give up
@@ -227,10 +227,9 @@ function scene.enter()
     lastInput=""
 
     local model,word=data.model,data.word
-    local clamp=MATH.clamp
     for i=1,#AnswerWordList do
         local w=AnswerWordList[i]
-        w[2]=clamp(GetSimilarity(model,word,w[1]),-1,1)
+        w[2]=GetSimilarity(model,word,w[1])
     end
     table.sort(AnswerWordList,function(a,b) return a[2]>b[2] end)
     local prev={"MrZ",26}

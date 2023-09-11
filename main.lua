@@ -204,6 +204,10 @@ do -- Game code
                 t1,t2=t2,t1 -- swap
             end
         end
+        if model==3 then
+            local totalWeight=3+2+(len-4)+2+3
+            score=score/totalWeight
+        end
         return score/len/2
     end
     local function editDist(s1,s2) -- By Copilot
