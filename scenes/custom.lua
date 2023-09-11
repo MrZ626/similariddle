@@ -23,7 +23,11 @@ scene.widgetList={
     WIDGET.new{type='button_fill',x=640,y=500,w=90,fontSize=25,color='lB',text="Code",code=function()
         local code=love.system.getClipboardText()
         if code then code=code:trim() end
-        if not pcall(PlayFromCode,code) then
+        local success,data=pcall(ParseCode,code)
+        if success then
+            SCN.go('play',nil,data)
+            MSG.new('check',"Riddle code loaded!")
+        else
             MSG.new('error',"Invalid riddle code: "..(code and #code>0 and code or "?"),1)
         end
     end},

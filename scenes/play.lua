@@ -308,30 +308,8 @@ function scene.keyDown(key,isRep)
             MSG.new('info',"Can't export code in this mode",0.5)
             return
         else
-            -- print("word: "..data.word)
-            -- print("lib: "..data.lib)
-            -- print("len: "..data.len)
-            -- print("model: "..data.model)
-            local id=TABLE.find(WordLib[data.lib],data.word)
-            -- print("id: "..id)
-            local abc=0
-            while not ABC[id] do
-                abc=abc+385
-                id=id-240
-            end
-            abc=abc+ABC[id]
-            -- print("abc: "..abc)
-
-            local pid=1547
-            local p
-            repeat
-                pid=pid+1
-                p=Primes[pid]*abc
-            until p%5==data.lib and p%7==data.len and p%11==data.model
-            -- print("find prime: "..Primes[pid])
-            -- print("result: "..p)
-            -- print(string.format("hex: %x",p))
-            love.system.setClipboardText(string.format("%x",p))
+            local str=GenerateCode(data)
+            love.system.setClipboardText(str)
             MSG.new('check',"Riddle code copied to clipboard!",1)
         end
     elseif key=='v' and love.keyboard.isDown('lctrl','rctrl') then
