@@ -206,7 +206,7 @@ do -- Game code
         end
         if model==3 then
             local totalWeight=3+2+(len-4)+2+3
-            score=score/totalWeight
+            score=score/totalWeight*len
         end
         return score/len/2
     end
