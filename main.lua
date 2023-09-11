@@ -74,7 +74,7 @@ do -- Load words
         -- print("lib: "..data.lib)
         -- print("len: "..data.len)
         -- print("model: "..data.model)
-        local id=TABLE.find(WordLib[data.lib],data.word)
+        local id=TABLE.findOrdered(WordLib[data.lib],data.word)
         -- print("id: "..id)
         local abc=0
         while not ABC[id] do
@@ -115,7 +115,7 @@ do -- Load words
             end
         end
         -- print("abc: ".._id)
-        _id=TABLE.find(ABC,_id%385)+math.floor(_id/385)*240
+        _id=TABLE.findOrdered(ABC,_id%385)+math.floor(_id/385)*240
         -- print("id: ".._id)
         local word=WordLib[_lib][_id]
         -- print("word: "..word)

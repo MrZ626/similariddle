@@ -240,7 +240,7 @@ function scene.enter()
         prev=cur
     end
     collectgarbage()
-    for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+    -- for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
 
     setSortTitle(1,"score")
     setSortDir(1,"descend")
