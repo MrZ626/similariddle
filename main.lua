@@ -225,9 +225,10 @@ do -- Game code
         return dp[len1][len2]
     end
     function GetSimilarity(model,w1,w2)
+        local final
         if model==4 then
             local dist=editDist(w1,w2)
-            return 1-(dist/#w1+dist/#w2)/2
+            final=1-(dist/#w1+dist/#w2)/2
         else
             local maxSimilarity=-1e99
             local short,long=#w1<#w2 and w1 or w2,#w1<#w2 and w2 or w1
@@ -235,8 +236,9 @@ do -- Game code
             for i=1,#long-#short+1 do
                 maxSimilarity=math.max(maxSimilarity,combMatch(model,short,long:sub(i,i+#short-1))-(#long-#short)/#long)
             end
-            return maxSimilarity
+            final=maxSimilarity
         end
+        return final-final%2^-26
     end
 end
 
