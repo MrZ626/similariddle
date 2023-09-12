@@ -33,7 +33,7 @@ local defaultSortMethod={
     {
         {"id","descend"},
         {"word","ascend"},
-    }
+    },
 }
 
 local wordW,wordH
@@ -173,7 +173,7 @@ local function guess(w,giveup)
         textObjLight=gc.newText(getFont(25),""),
     }
     history[id]=lastGuess -- [number]
-    history[w]=lastGuess -- [string]
+    history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
 
     return true
@@ -210,6 +210,8 @@ hisType2=WIDGET.new{type='button',pos={0,0},fontSize=25,code=function() setSortT
 --- @type Zenitha.widget.button
 hisDir2=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(2,TABLE.next(dirName,hisSortMethods[2][1][2])) end,lineWidth=2}
 
+local savedWidgets={inputBox,hisBox1,hisType1,hisDir1,hisBox2,hisType2,hisDir2}
+
 local scene={}
 
 function scene.enter()
@@ -239,7 +241,7 @@ function scene.enter()
         prev=cur
     end
     collectgarbage()
-    for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+    -- for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
 
     setSortTitle(1,"score")
     setSortDir(1,"descend")
@@ -282,9 +284,7 @@ function scene.resize()
         hisBtnH
     hisType2.x,hisType2.y,hisType2.w,hisType2.h=hisType1.x+hisW/2,hisType1.y,hisType1.w,hisType1.h
     hisDir2.x,hisDir2.y,hisDir2.w,hisDir2.h=hisDir1.x+hisW/2,hisDir1.y,hisDir1.w,hisDir1.h
-    inputBox:reset()
-    hisBox1:reset() hisType1:reset() hisDir1:reset()
-    hisBox2:reset() hisType2:reset() hisDir2:reset()
+    for _,v in next,savedWidgets do v:reset() end
 end
 
 function scene.keyDown(key,isRep)
@@ -434,7 +434,7 @@ function scene.draw()
     gc_translate(-SCR.w/SCR.k*0.15,0)
     gc_setLineWidth(2)
     gc_setColor(COLOR.L)
-    gc_circle('line',0,0,140)-- Max area
+    gc_circle('line',0,0,140) -- Max area
 end
 
 scene.widgetList={

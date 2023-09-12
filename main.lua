@@ -56,7 +56,7 @@ do -- Load words
         FILE.load('lib_full.txt','-string'):split('\r\n'),
     }
     WordHashMap={}
-    AnswerWordList={}-- Temp list, for sorting by simmilarity
+    AnswerWordList={} -- Temp list, for sorting by simmilarity  
     for libID,lib in next,WordLib do
         for i=1,#lib do
             if not WordHashMap[lib[i]] then
