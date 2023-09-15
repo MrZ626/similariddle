@@ -38,25 +38,32 @@ WIDGET._prototype.slider._approachSpeed=260
 ]]
 
 do -- Load words
-    local Primes={2} do
+    local Primes={2}
+    do
         local n=3
         while n<=62000 do
             local isPrime=true
-            for i=1,#Primes do if n%Primes[i]==0 then isPrime=false break end end
+            for i=1,#Primes do
+                if n%Primes[i]==0 then
+                    isPrime=false
+                    break
+                end
+            end
             if isPrime then table.insert(Primes,n) end
             n=n+2
         end
     end
-    local ABC={} for i=1,385 do if i%5~=0 and i%7~=0 and i%11~=0 then table.insert(ABC,i) end end
+    local ABC={}
+    for i=1,385 do if i%5~=0 and i%7~=0 and i%11~=0 then table.insert(ABC,i) end end
     WordLib={
         FILE.load('lib_cet4.txt','-string'):split('\r\n'),
         FILE.load('lib_cet6.txt','-string'):split('\r\n'),
         FILE.load('lib_tem8.txt','-string'):split('\r\n'),
-        FILE.load('lib_gre.txt', '-string'):split('\r\n'),
+        FILE.load('lib_gre.txt','-string'):split('\r\n'),
         FILE.load('lib_full.txt','-string'):split('\r\n'),
     }
     WordHashMap={}
-    AnswerWordList={} -- Temp list, for sorting by simmilarity  
+    AnswerWordList={} -- Temp list, for sorting by simmilarity
     for libID,lib in next,WordLib do
         for i=1,#lib do
             if not WordHashMap[lib[i]] then
@@ -68,6 +75,16 @@ do -- Load words
         end
     end
     collectgarbage()
+
+    -- local finding="aux"
+    -- local count=0
+    -- for i=1,#AnswerWordList do
+    --     if AnswerWordList[i][1]:sub(-#finding)==finding then
+    --         print(AnswerWordList[i][1])
+    --         count=count+1
+    --     end
+    -- end
+    -- print(count)
 
     function GenerateCode(data)
         -- print("word: "..data.word)
@@ -119,7 +136,7 @@ do -- Load words
         -- print("id: ".._id)
         local word=WordLib[_lib][_id]
         -- print("word: "..word)
-        return{
+        return {
             fixed=true,
             word=word,
             lib=_lib,
@@ -215,13 +232,18 @@ do -- Game code
         local t1,t2={},{}
         for i=1,len1 do t1[i]=s1:sub(i,i) end
         for i=1,len2 do t2[i]=s2:sub(i,i) end
+
         local dp={}
-        for i=0,len1 do dp[i]=TABLE.new(0,len2) end dp[0][0]=0
+        for i=0,len1 do dp[i]=TABLE.new(0,len2) end
+        dp[0][0]=0
         for i=1,len1 do dp[i][0]=i end
         for i=1,len2 do dp[0][i]=i end
-        for i=1,len1 do for j=1,len2 do
-            dp[i][j]=t1[i]==t2[j] and dp[i-1][j-1] or math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1
-        end end
+
+        for i=1,len1 do
+            for j=1,len2 do
+                dp[i][j]=t1[i]==t2[j] and dp[i-1][j-1] or math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1
+            end
+        end
         return dp[len1][len2]
     end
     function GetSimilarity(model,w1,w2)
@@ -275,8 +297,8 @@ until FakeTitleString~=TitleString
 
 -- Load scene files from SOURCE ONLY
 for _,v in next,love.filesystem.getDirectoryItems('scenes') do
-    if FILE.isSafe('scenes/' .. v) then
+    if FILE.isSafe('scenes/'..v) then
         local sceneName=v:sub(1,-5)
-        SCN.add(sceneName,require('scenes.' .. sceneName))
+        SCN.add(sceneName,require('scenes.'..sceneName))
     end
 end
