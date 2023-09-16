@@ -12,6 +12,13 @@
 --- @field wordLight string
 --- @field textObjLight love.Text
 
+--- @class particle
+--- @field angle number
+--- @field dist number
+--- @field va number
+--- @field size number
+--- @field color Zenitha.Color
+
 local GC=GC
 local gc=love.graphics
 local gc_replaceTransform,gc_translate=gc.replaceTransform,gc.translate
@@ -19,6 +26,7 @@ local gc_setColor,gc_setLineWidth=gc.setColor,gc.setLineWidth
 local gc_draw,gc_rectangle,gc_circle=gc.draw,gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
 local getFont,setFont=FONT.get,FONT.set
+local sin,cos=math.sin,math.cos
 local ins=table.insert
 local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
@@ -28,11 +36,11 @@ local dirName={"ascend","descend"}
 local defaultSortMethod={
     {
         {"score","descend"},
-        {"word","ascend"},
+        {"word","descend"},
     },
     {
-        {"id","descend"},
-        {"word","ascend"},
+        {"id","ascend"},
+        {"word","descend"},
     },
 }
 
@@ -79,6 +87,8 @@ local lastGuess
 local history
 --- @type table<table<guess>>
 local viewHistory={}
+--- @type particle[]
+local particles={}
 
 local hisSortMethods={}
 local hisViewCount=2
@@ -86,10 +96,10 @@ local lastInput
 
 local hisSortMethod
 local function hisSortFunc(g1,g2)
-    for j=1,#hisSortMethod do
-        local v1,v2=g1[hisSortMethod[j][1]],g2[hisSortMethod[j][1]]
+    for i=1,#hisSortMethod do
+        local v1,v2=g1[hisSortMethod[i][1]],g2[hisSortMethod[i][1]]
         if v1~=v2 then
-            return v1<v2==(hisSortMethod[j][2]=="ascend")==(hisSortMethod[j][1]=="score")
+            return v1<v2==(hisSortMethod[i][2]=="ascend")==(hisSortMethod[i][1]=="score")
         end
     end
     return true
@@ -141,10 +151,10 @@ local function guess(w,giveup)
         end
     end
     local id=#history+1
-    local rank,rankColor
-    if wordRankHashtable[w] then
-        rank=wordRankHashtable[w]<1000 and wordRankHashtable[w] or math.floor(wordRankHashtable[w]/1000).."k"
-        rankColor=COLOR.L
+    local ansListRank=wordRankHashtable[w]
+    local rank
+    if ansListRank then
+        rank=ansListRank
     else
         local l,r=1,#AnswerWordList
         while l<r do
@@ -155,8 +165,7 @@ local function guess(w,giveup)
                 r=m
             end
         end
-        rank=l<1000 and l or math.floor(l/1000).."k"
-        rankColor=COLOR.LD
+        rank=l
     end
     lastGuess={
         id=id,
@@ -164,10 +173,10 @@ local function guess(w,giveup)
         length=#w,
         score=score,
         info=info,
-        rank=rank,
+        rank=rank<1000 and rank or math.floor(rank/1000).."k",
         textObj=gc.newText(getFont(25),w),
         bgColor={1-score,1+score,1-math.abs(score),.26},
-        rankColor=rankColor,
+        rankColor=ansListRank and COLOR.L or COLOR.LD,
         idFont=id<100 and 15 or id<1000 and 10 or 7,
         wordLight="",
         textObjLight=gc.newText(getFont(25),""),
@@ -176,6 +185,22 @@ local function guess(w,giveup)
     history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
 
+    if rank<=1000 then
+        local win=rank==1
+        local rate=MATH.imix(1,1000,rank)
+        local dist=win and 0 or MATH.mix(22,140,rate)
+        local bright=MATH.mix(.6,.26,rate)
+        local vowelCount=select(2,string.gsub(w,"[aeio]","x"))+select(2,string.gsub(w,"u","x"))*2.6
+        ins(particles,{
+            angle=math.random()*MATH.tau,
+            dist=dist,
+            va=win and 0 or (26/dist*(1+1.026^vowelCount)),
+            size=win and 18 or (ansListRank and 3 or 2),
+            color=ansListRank and
+                {1-bright,1,1-bright,.62} or
+                {bright,bright,bright,.62},
+        })
+    end
     return true
 end
 
@@ -227,11 +252,12 @@ function scene.enter()
         hisSortMethods[i]=TABLE.shift(defaultSortMethod[i])
     end
     lastInput=""
+    TABLE.cut(particles)
 
     local model,word=data.model,data.word
     for i=1,#AnswerWordList do
         local w=AnswerWordList[i]
-        w[2]=GetSimilarity(model,word,w[1])
+        w[2]=(#w[1]<=#word/2 or #w[1]>=#word*2) and -26 or GetSimilarity(model,word,w[1])
     end
     table.sort(AnswerWordList,function(a,b) return a[2]>b[2] end)
     local prev={"MrZ",26}
@@ -359,7 +385,7 @@ function scene.keyDown(key,isRep)
     end
 end
 
-function scene.update()
+function scene.update(dt)
     if TASK.lock("playing_second_check",0.626) and inputBox._value~=lastInput then
         lastInput=inputBox._value
         if lastInput=="" then
@@ -393,6 +419,10 @@ function scene.update()
                 end
             end
         end
+    end
+    for i=1,#particles do
+        local p=particles[i]
+        p.angle=p.angle+p.va*dt
     end
 end
 
@@ -432,9 +462,15 @@ function scene.draw()
 
     gc_replaceTransform(SCR.xOy_r)
     gc_translate(-SCR.w/SCR.k*0.15,0)
-    gc_setLineWidth(2)
-    gc_setColor(COLOR.L)
-    gc_circle('line',0,0,140) -- Max area
+    -- gc_setLineWidth(2)
+    -- gc_setColor(COLOR.L)
+    -- gc_circle('line',0,0,140) -- Max area
+
+    for i=1,#particles do
+        local p=particles[i]
+        gc_setColor(p.color)
+        gc_circle('fill',p.dist*cos(p.angle),p.dist*sin(p.angle),p.size)
+    end
 end
 
 scene.widgetList={
