@@ -66,6 +66,7 @@ do -- Load words
     AnswerWordList={} -- Temp list, for sorting by simmilarity
     for libID,lib in next,WordLib do
         for i=1,#lib do
+            lib[i]=lib[i]:lower()
             if not WordHashMap[lib[i]] then
                 WordHashMap[lib[i]]=libID
                 if libID<5 then
