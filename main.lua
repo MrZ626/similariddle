@@ -161,6 +161,7 @@ do -- Game code
             word=wordLib[math.random(1,#wordLib)]
         until #word>=LengthLevel[len][1] and #word<=LengthLevel[len][2]
         SCN.go('play',nil,{
+            daily=false,
             fixed=false,
             word=word,
             lib=lib,

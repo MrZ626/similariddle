@@ -13,7 +13,11 @@
 --- @field textObjLight love.Text
 
 --- @class particle
+--- @field answer? true
+--- @field word love.Text
+--- @field alpha number
 --- @field angle number
+--- @field aThres number
 --- @field dist number
 --- @field va number
 --- @field size number
@@ -21,13 +25,15 @@
 
 local GC=GC
 local gc=love.graphics
-local gc_replaceTransform,gc_translate=gc.replaceTransform,gc.translate
+local gc_replaceTransform,gc_translate,gc_rotate=gc.replaceTransform,gc.translate,gc.rotate
 local gc_setColor,gc_setLineWidth=gc.setColor,gc.setLineWidth
 local gc_draw,gc_rectangle,gc_circle=gc.draw,gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
+local gc_push,gc_pop=gc.push,gc.pop
 local getFont,setFont=FONT.get,FONT.set
 local sin,cos=math.sin,math.cos
-local floor,max,min=math.floor,math.max,math.min
+local max,min=math.max,math.min
+local floor,abs=math.floor,math.abs
 local ins=table.insert
 local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
@@ -82,8 +88,6 @@ local data
 local wordRankHashtable={}
 --- @type string|false
 local result
---- @type number|false
-local resultTime
 --- @type guess?
 local lastGuess
 --- @type table<number|string,guess>
@@ -152,7 +156,6 @@ local function guess(w,giveup)
                 -- TODO: win
                 MSG.new('check',"You got it right!",2.6)
             end
-            resultTime=0
         end
     end
     local id=#history+1
@@ -190,22 +193,27 @@ local function guess(w,giveup)
     history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
 
-    if rank<=1000 and not result then
-        local rate=MATH.iLerp(1,1000,rank)
-        local dist=MATH.lerp(22,140,rate)
+    if rank<=2600 and not result then
+        local rate=MATH.iLerp(1,2600,rank)
+        local dist=MATH.lerp(22,126,rate)+MATH.rand(-2,12)
         local bright=MATH.lerp(.6,.26,rate)
         local vowelCount=select(2,string.gsub(w,"[aeio]","x"))+select(2,string.gsub(w,"u","x"))*2.6
         local p={
+            word=gc.newText(getFont(10),w),
+            alpha=0,
             angle=math.random()*MATH.tau,
+            aThres=80*.126/dist,
             dist=dist,
             va=(26/dist*(1+1.026^vowelCount)),
             size=(ansListRank and 3 or 2),
             color=ansListRank and
-                {1-bright,1,1-bright,.62} or
-                {bright,bright,bright,.62},
+                {1-bright,1,1-bright,0} or
+                {bright,bright,bright,0},
         }
         ins(particles,p)
         if _result then
+            p.answer=true
+            p.aThres=26
             p.dist=0
             p.va=0
             p.color[4]=0
@@ -262,7 +270,6 @@ function scene.enter()
     -- for k,v in next,data do print(k,v)end
 
     result=false
-    resultTime=false
     lastGuess=nil
     history={}
     for i=1,hisViewCount do
@@ -341,7 +348,9 @@ function scene.keyDown(key,isRep)
     elseif key=='=' then
         if isRep then return end
         if result then return end
-        if TASK.lock("sureGiveup",1) then
+        if data.daily then
+            MSG.new('info','Never gonna give you up~',1)
+        elseif TASK.lock("sureGiveup",1) then
             MSG.new('warn','Press again to give up',0.5)
         else
             guess(data.word,true)
@@ -367,8 +376,19 @@ function scene.keyDown(key,isRep)
             SCN.back()
         end
     -- elseif key=='h' then
+    --     guess("wart")
+    --     guess("poker")
+    --     guess("cooker")
+    --     guess("warmer")
+    --     guess("walk")
+    --     guess("walking")
+    --     guess("walks")
+    --     guess("walkers")
+    --     guess("walker")
+    --     guess("parker")
     --     guess("workers")
     --     guess("working")
+    --     guess("worked")
     --     guess("warper")
     --     guess("warping")
     --     guess("taking")
@@ -456,27 +476,35 @@ function scene.update(dt)
             end
         end
     end
+    local mx,my=love.mouse.getPosition()
+    mx,my=SCR.xOy_r:inverseTransformPoint(mx,my)
+    mx=mx+SCR.w/SCR.k*0.15
+    local mdist=(mx^2+my^2)^.5
+    local mangle=math.atan2(my,mx)
     for i=#particles,1,-1 do
         local p=particles[i]
         p.angle=p.angle+p.va*dt
         if result then
-            if p.dist==0 then
+            if p.answer then
                 p.color[4]=min(p.color[4]+dt/2.6,1)
                 p.size=MATH.expApproach(p.size,min(5+(#history)^.5,20),dt)
             else
-                p.dist=p.dist-dt*60
+                p.dist=p.dist-dt*26
                 if p.dist<=6 then
                     table.remove(particles,i)
                 elseif p.dist<=20 then
                     p.color[4]=MATH.interpolate(6,0,20,.62,p.dist)
                 end
             end
+        else
+            if p.color[4]<.62 then
+                p.color[4]=min(p.color[4]+dt/2.6,.62)
+            end
         end
-    end
-    if resultTime then
-        resultTime=resultTime+dt
-        if resultTime>10 then
-            resultTime=false
+        if abs(mdist-p.dist)<=p.size+3 and (mangle-p.angle+p.aThres)%MATH.tau<=2*p.aThres then
+            p.alpha=p.answer and 1 or .26
+        else
+            p.alpha=max(p.alpha-dt/1.626,0)
         end
     end
 end
@@ -517,14 +545,33 @@ function scene.draw()
 
     gc_replaceTransform(SCR.xOy_r)
     gc_translate(-SCR.w/SCR.k*0.15,0)
+
     -- gc_setLineWidth(2)
     -- gc_setColor(COLOR.L)
     -- gc_circle('line',0,0,140) -- Max area
 
     for i=1,#particles do
         local p=particles[i]
+        gc_push('transform')
+        gc_translate(p.dist*cos(p.angle),p.dist*sin(p.angle))
+        if p.answer then
+            local n=7
+            local r=MATH.tau/n
+            gc_setColor(1,1,1,p.color[4]*.0626)
+            gc_push('transform')
+            gc_rotate(love.timer.getTime()*1.26)
+            for j=0,n-1 do
+                gc.arc('fill','pie',0,0,4.2*p.size^1.626,j*r,(j+.5)*r)
+            end
+            gc_pop()
+        end
         gc_setColor(p.color)
-        gc_circle('fill',p.dist*cos(p.angle),p.dist*sin(p.angle),p.size)
+        gc_circle('fill',0,0,p.size)
+        if p.alpha>0 then
+            gc_setColor(1,1,1,p.alpha)
+            GC.mDraw(p.word)
+        end
+        gc_pop()
     end
 end
 

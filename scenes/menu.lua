@@ -5,6 +5,7 @@ local function playDaily()
     local lib=MATH.randFreq{7,2,1,0}
     local wordLib=WordLib[lib]
     SCN.go('play',nil,{
+        daily=true,
         fixed=true,
         word=wordLib[math.random(1,#wordLib)],
         lib=lib,
