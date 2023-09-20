@@ -10,7 +10,7 @@ function love.conf(t)
     end
 
     local W=t.window
-    W.title=require"version".appName.."  "..require"version".appVer
+    W.title=require"version".appName.."  "..require"version".string
     W.width,W.height=1000,600
     W.minwidth,W.minheight=250,150
     W.borderless=false

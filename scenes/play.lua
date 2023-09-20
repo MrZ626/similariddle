@@ -27,6 +27,7 @@ local gc_draw,gc_rectangle,gc_circle=gc.draw,gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
 local getFont,setFont=FONT.get,FONT.set
 local sin,cos=math.sin,math.cos
+local floor,max,min=math.floor,math.max,math.min
 local ins=table.insert
 local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
@@ -79,8 +80,10 @@ end
 local data
 --- @type table<string,number>
 local wordRankHashtable={}
---- @type string|boolean
+--- @type string|false
 local result
+--- @type number|false
+local resultTime
 --- @type guess?
 local lastGuess
 --- @type table<number|string,guess>
@@ -89,6 +92,7 @@ local history
 local viewHistory={}
 --- @type particle[]
 local particles={}
+--- @type number
 
 local hisSortMethods={}
 local hisViewCount=2
@@ -131,7 +135,7 @@ local function guess(w,giveup)
         return true
     end
 
-    local score,info
+    local score,info,_result
     if #w<=#data.word/2 or #w>=#data.word*2 then
         score=-26
         info="X"
@@ -140,14 +144,15 @@ local function guess(w,giveup)
         info=string.format("%.2f%%",100*score)
         if w==data.word then
             if giveup then
-                result='gaveup'
+                _result='gaveup'
                 -- TODO: give up
                 info="Give Up"
             else
-                result='win'
+                _result='win'
                 -- TODO: win
                 MSG.new('check',"You got it right!",2.6)
             end
+            resultTime=0
         end
     end
     local id=#history+1
@@ -158,7 +163,7 @@ local function guess(w,giveup)
     else
         local l,r=1,#AnswerWordList
         while l<r do
-            local m=math.floor((l+r)/2)
+            local m=floor((l+r)/2)
             if score<AnswerWordList[m][2] then
                 l=m+1
             else
@@ -173,7 +178,7 @@ local function guess(w,giveup)
         length=#w,
         score=score,
         info=info,
-        rank=rank<1000 and rank or math.floor(rank/1000).."k",
+        rank=rank<1000 and rank or floor(rank/1000).."k",
         textObj=gc.newText(getFont(25),w),
         bgColor={1-score,1+score,1-math.abs(score),.26},
         rankColor=ansListRank and COLOR.L or COLOR.LD,
@@ -185,22 +190,34 @@ local function guess(w,giveup)
     history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
 
-    if rank<=1000 then
-        local win=rank==1
-        local rate=MATH.imix(1,1000,rank)
-        local dist=win and 0 or MATH.mix(22,140,rate)
-        local bright=MATH.mix(.6,.26,rate)
+    if rank<=1000 and not result then
+        local rate=MATH.iLerp(1,1000,rank)
+        local dist=MATH.lerp(22,140,rate)
+        local bright=MATH.lerp(.6,.26,rate)
         local vowelCount=select(2,string.gsub(w,"[aeio]","x"))+select(2,string.gsub(w,"u","x"))*2.6
-        ins(particles,{
+        local p={
             angle=math.random()*MATH.tau,
             dist=dist,
-            va=win and 0 or (26/dist*(1+1.026^vowelCount)),
-            size=win and 18 or (ansListRank and 3 or 2),
+            va=(26/dist*(1+1.026^vowelCount)),
+            size=(ansListRank and 3 or 2),
             color=ansListRank and
                 {1-bright,1,1-bright,.62} or
                 {bright,bright,bright,.62},
-        })
+        }
+        ins(particles,p)
+        if _result then
+            p.dist=0
+            p.va=0
+            p.color[4]=0
+            p.size=0
+            if _result=='gaveup' then
+                for i=1,3 do
+                    p.color[i]=bright
+                end
+            end
+        end
     end
+    if _result then result=_result end
     return true
 end
 
@@ -245,6 +262,7 @@ function scene.enter()
     -- for k,v in next,data do print(k,v)end
 
     result=false
+    resultTime=false
     lastGuess=nil
     history={}
     for i=1,hisViewCount do
@@ -272,7 +290,7 @@ function scene.enter()
     setSortTitle(1,"score")
     setSortDir(1,"descend")
     setSortTitle(2,"id")
-    setSortDir(2,"descend")
+    setSortDir(2,"ascend")
     inputBox:setText('')
     hisBox1:setList(viewHistory[1])
     hisBox2:setList(viewHistory[2])
@@ -348,6 +366,24 @@ function scene.keyDown(key,isRep)
         else
             SCN.back()
         end
+    -- elseif key=='h' then
+    --     guess("workers")
+    --     guess("working")
+    --     guess("warper")
+    --     guess("warping")
+    --     guess("taking")
+    --     guess("take")
+    --     guess("taked")
+    --     guess("taker")
+    --     guess("takers")
+    --     guess("talk")
+    --     guess("talked")
+    --     guess("talker")
+    --     guess("talkers")
+    --     guess("talking")
+    --     guess("berk")
+    --     guess("lerp")
+    --     -- 583e2d1
     elseif key=='up' then
         if love.keyboard.isDown('lctrl','rctrl') then
             hisBox1:scroll(10,0)
@@ -420,9 +456,28 @@ function scene.update(dt)
             end
         end
     end
-    for i=1,#particles do
+    for i=#particles,1,-1 do
         local p=particles[i]
         p.angle=p.angle+p.va*dt
+        if result then
+            if p.dist==0 then
+                p.color[4]=min(p.color[4]+dt/2.6,1)
+                p.size=MATH.expApproach(p.size,min(5+(#history)^.5,20),dt)
+            else
+                p.dist=p.dist-dt*60
+                if p.dist<=6 then
+                    table.remove(particles,i)
+                elseif p.dist<=20 then
+                    p.color[4]=MATH.interpolate(6,0,20,.62,p.dist)
+                end
+            end
+        end
+    end
+    if resultTime then
+        resultTime=resultTime+dt
+        if resultTime>10 then
+            resultTime=false
+        end
     end
 end
 

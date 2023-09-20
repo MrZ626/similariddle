@@ -1,7 +1,7 @@
 require'Zenitha'
 
 Zenitha.setAppName('similariddle')
-Zenitha.setVersionText(require"version".appVer)
+Zenitha.setVersionText(require"version".string)
 Zenitha.setFirstScene('menu')
 Zenitha.setMaxFPS(40) -- Enough!
 Zenitha.setClickFX(false)
