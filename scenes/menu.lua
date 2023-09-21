@@ -16,6 +16,10 @@ end
 
 local scene={}
 
+function scene.enter()
+    CheckDate()
+end
+
 function scene.keyDown(key,isRep)
     if isRep then return end
     if key=='escape' then
@@ -29,9 +33,17 @@ end
 
 function scene.draw()
     FONT.set(80)
-    GC.mStr(TitleString,500,120)
+    GC.mStr(GameData.dailyPassed and FakeTitleString or TitleString,500,120)
     FONT.set(35)
     GC.mStr("By MrZ & Staffhook",500,220)
+    FONT.set(30)
+    if 1 or GameData.dailyCount>0 then
+        GC.printf(GameData.dailyCount,350-130,430,260,'right')
+    end
+    if GameData.dailyPassed then
+        GC.setColor(.62,.9,.42)
+        GC.print("Pass",350-130,430)
+    end
 end
 
 scene.widgetList={

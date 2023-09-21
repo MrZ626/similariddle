@@ -153,7 +153,13 @@ local function guess(w,giveup)
                 info="Give Up"
             else
                 _result='win'
-                -- TODO: win
+                if data.daily and not GameData.dailyPassed then
+                    GameData.dailyPassed=true
+                    GameData.dailyCount=GameData.dailyCount+1
+                    SaveData()
+                else
+                    -- TODO: normal win
+                end
                 MSG.new('check',"You got it right!",2.6)
             end
         end

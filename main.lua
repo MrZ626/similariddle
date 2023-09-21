@@ -304,3 +304,29 @@ for _,v in next,love.filesystem.getDirectoryItems('scenes') do
         SCN.add(sceneName,require('scenes.'..sceneName))
     end
 end
+
+-- Saving
+GameData={
+    date=os.date("%Y%m%d"),
+    dailyPassed=false,
+    dailyCount=0,
+}
+function CheckDate()
+    local date=os.date("%Y%m%d")
+    if date~=GameData.date then
+        GameData.date=date
+        GameData.dailyPassed=false
+        SaveData()
+    end
+end
+function SaveData()
+    print("SaveData")
+    pcall(FILE.save,GameData,'save.dat','-luaon')
+end
+function LoadData()
+    print("LoadData")
+    local suc,res=pcall(FILE.load,'save.dat','-luaon')
+    if suc then TABLE.update(res,GameData) end
+end
+LoadData()
+love.filesystem.remove('guesses.dat')
