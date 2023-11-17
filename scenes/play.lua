@@ -26,7 +26,7 @@
 local GC=GC
 local gc=love.graphics
 local gc_replaceTransform,gc_translate,gc_rotate=gc.replaceTransform,gc.translate,gc.rotate
-local gc_setColor,gc_setLineWidth=gc.setColor,gc.setLineWidth
+local gc_setColor=gc.setColor
 local gc_draw,gc_rectangle,gc_circle=gc.draw,gc.rectangle,gc.circle
 local gc_print,gc_printf=gc.print,gc.printf
 local gc_push,gc_pop=gc.push,gc.pop
