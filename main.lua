@@ -6,7 +6,6 @@ Zenitha.setFirstScene('menu')
 Zenitha.setMaxFPS(40) -- Enough!
 Zenitha.setClickFX(false)
 Zenitha.setDrawCursor(NULL)
-Zenitha.setOnFnKeys({NULL,NULL,NULL,NULL,NULL,NULL,love._openConsole})
 
 love.keyboard.setKeyRepeat(true)
 if MOBILE then

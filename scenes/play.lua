@@ -23,6 +23,8 @@
 --- @field size number
 --- @field color Zenitha.Color
 
+local testWord
+
 local GC=GC
 local gc=love.graphics
 local gc_replaceTransform,gc_translate,gc_rotate=gc.replaceTransform,gc.translate,gc.rotate
@@ -272,8 +274,10 @@ local scene={}
 
 function scene.enter()
     data=TABLE.copy(SCN.args[1])
-    -- data.word='significant'
-    -- for k,v in next,data do print(k,v)end
+    if testWord then
+        data.word=testWord
+        for k,v in next,data do print(k,v)end
+    end
 
     result=false
     lastGuess=nil
@@ -298,7 +302,11 @@ function scene.enter()
         prev=cur
     end
     collectgarbage()
-    -- for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+
+    if testWord then
+        for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
+        testWord=nil
+    end
 
     setSortTitle(1,"score")
     setSortDir(1,"descend")

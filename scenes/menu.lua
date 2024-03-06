@@ -28,6 +28,8 @@ function scene.keyDown(key,isRep)
         else
             Zenitha._quit('fade')
         end
+    elseif key=='f6' then
+        pcall(love._openConsole)
     end
 end
 
