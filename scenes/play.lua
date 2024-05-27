@@ -40,16 +40,16 @@ local ins=table.insert
 local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
 local methodName={"score","id","word","length"}
-local dirName={"ascend","descend"}
+local dirName={'ascend','descend'}
 
 local defaultSortMethod={
     {
-        {"score","descend"},
-        {"word","descend"},
+        {"score",'descend'},
+        {"word",'descend'},
     },
     {
-        {"id","ascend"},
-        {"word","descend"},
+        {"id",'ascend'},
+        {"word",'descend'},
     },
 }
 
@@ -109,7 +109,7 @@ local function hisSortFunc(g1,g2)
     for i=1,#hisSortMethod do
         local v1,v2=g1[hisSortMethod[i][1]],g2[hisSortMethod[i][1]]
         if v1~=v2 then
-            return v1<v2==(hisSortMethod[i][2]=="ascend")==(hisSortMethod[i][1]=="score")
+            return v1<v2==(hisSortMethod[i][2]=='ascend')==(hisSortMethod[i][1]=="score")
         end
     end
     return true
@@ -237,9 +237,9 @@ local function guess(w,giveup)
     return true
 end
 
---- @type Zenitha.widget.inputBox
+--- @type Zenitha.Widget.inputBox
 local inputBox=WIDGET.new{type='inputBox',pos={0,0},regex='[a-z]',maxInputLength=41,lineWidth=2}
---- @type Zenitha.widget.listBox,Zenitha.widget.listBox
+--- @type Zenitha.Widget.listBox,Zenitha.Widget.listBox
 local hisBox1,hisBox2=
     WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2,scrollBarWidth=4,scrollBarPos='right'},
     WIDGET.new{type='listBox',pos={0,0},drawFunc=listDrawFunc,lineHeight=35,lineWidth=2,scrollBarWidth=4,scrollBarPos='right'}
@@ -255,25 +255,26 @@ end
 local function setSortDir(i,mode)
     hisSortMethods[i][1][2]=mode
     local btn=i==1 and hisDir1 or hisDir2
-    btn.text=hisSortMethods[i][1][2]=="ascend" and "↑" or "↓"
+    btn.text=hisSortMethods[i][1][2]=='ascend' and "↑" or "↓"
     updateViewHis(nil,i)
     btn:reset()
 end
---- @type Zenitha.widget.button
-hisType1=WIDGET.new{type='button',pos={0,0},fontSize=25,code=function() setSortTitle(1,TABLE.next(methodName,hisSortMethods[1][1][1])) end,lineWidth=2}
---- @type Zenitha.widget.button
-hisDir1=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(1,TABLE.next(dirName,hisSortMethods[1][1][2])) end,lineWidth=2}
---- @type Zenitha.widget.button
-hisType2=WIDGET.new{type='button',pos={0,0},fontSize=25,code=function() setSortTitle(2,TABLE.next(methodName,hisSortMethods[2][1][1])) end,lineWidth=2}
---- @type Zenitha.widget.button
-hisDir2=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(2,TABLE.next(dirName,hisSortMethods[2][1][2])) end,lineWidth=2}
+--- @type Zenitha.Widget.button
+hisType1=WIDGET.new{type='button',pos={0,0},fontSize=20,code=function() setSortTitle(1,TABLE.next(methodName,hisSortMethods[1][1][1]) or 'score') end,lineWidth=2}
+--- @type Zenitha.Widget.button
+hisDir1=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(1,TABLE.next(dirName,hisSortMethods[1][1][2]) or 'ascend') end,lineWidth=2}
+--- @type Zenitha.Widget.button
+hisType2=WIDGET.new{type='button',pos={0,0},fontSize=20,code=function() setSortTitle(2,TABLE.next(methodName,hisSortMethods[2][1][1]) or 'score') end,lineWidth=2}
+--- @type Zenitha.Widget.button
+hisDir2=WIDGET.new{type='button',pos={0,0},code=function() setSortDir(2,TABLE.next(dirName,hisSortMethods[2][1][2]) or 'ascend') end,lineWidth=2}
 
 local savedWidgets={inputBox,hisBox1,hisType1,hisDir1,hisBox2,hisType2,hisDir2}
 
+---@type Zenitha.Scene
 local scene={}
 
 function scene.enter()
-    data=TABLE.copy(SCN.args[1])
+    data=TABLE.copyAll(SCN.args[1])
     if testWord then
         data.word=testWord
         for k,v in next,data do print(k,v)end
@@ -284,10 +285,10 @@ function scene.enter()
     history={}
     for i=1,hisViewCount do
         viewHistory[i]={}
-        hisSortMethods[i]=TABLE.shift(defaultSortMethod[i])
+        hisSortMethods[i]=TABLE.copy(defaultSortMethod[i])
     end
     lastInput=""
-    TABLE.cut(particles)
+    TABLE.clear(particles)
 
     local model,word=data.model,data.word
     for i=1,#AnswerWordList do
@@ -309,9 +310,9 @@ function scene.enter()
     end
 
     setSortTitle(1,"score")
-    setSortDir(1,"descend")
+    setSortDir(1,'descend')
     setSortTitle(2,"id")
-    setSortDir(2,"ascend")
+    setSortDir(2,'ascend')
     inputBox:setText('')
     hisBox1:setList(viewHistory[1])
     hisBox2:setList(viewHistory[2])
@@ -352,15 +353,17 @@ function scene.resize()
     for _,v in next,savedWidgets do v:reset() end
 end
 
+local function isCtrlDown() return love.keyboard.isDown('lctrl','rctrl') end
+local function isAltDown() return love.keyboard.isDown('lalt','ralt') end
 function scene.keyDown(key,isRep)
     if key=='return' then
-        if isRep then return end
+        if isRep then return true end
         local input=inputBox:getText()
         if guess(input) then
             inputBox:setText('')
         end
     elseif key=='=' then
-        if isRep then return end
+        if isRep then return true end
         if result then return end
         if data.daily then
             MSG.new('info','Never gonna give you up~',1)
@@ -369,7 +372,7 @@ function scene.keyDown(key,isRep)
         else
             guess(data.word,true)
         end
-    elseif key=='c' and love.keyboard.isDown('lctrl','rctrl') then
+    elseif key=='c' and isCtrlDown() then
         if data.fixed then
             MSG.new('info',"Can't export code in this mode",0.5)
             return
@@ -378,12 +381,12 @@ function scene.keyDown(key,isRep)
             love.system.setClipboardText(str)
             MSG.new('check',"Riddle code copied to clipboard!",1)
         end
-    elseif key=='v' and love.keyboard.isDown('lctrl','rctrl') then
+    elseif key=='v' and isCtrlDown() then
         local text=love.system.getClipboardText()
         if not text then return end
         inputBox:setText(text:readLine():trim():gsub('[^a-z]',''))
     elseif key=='escape' then
-        if isRep then return end
+        if isRep then return true end
         if TASK.lock('sureBack',1) then
             MSG.new('info',"Press again to quit",0.5)
         else
@@ -419,40 +422,36 @@ function scene.keyDown(key,isRep)
     --     guess("lerp")
     --     -- 583e2d1
     elseif key=='up' then
-        if love.keyboard.isDown('lctrl','rctrl') then
+        if isCtrlDown() then
             hisBox1:scroll(10,0)
-        elseif love.keyboard.isDown('lalt','ralt') then
+        elseif isAltDown() then
             hisBox2:scroll(10,0)
         else
             inputBox:setText(lastGuess and lastGuess.word or '')
         end
     elseif key=='down' then
-        if love.keyboard.isDown('lctrl','rctrl') then
+        if isCtrlDown() then
             hisBox1:scroll(-10,0)
-        elseif love.keyboard.isDown('lalt','ralt') then
+        elseif isAltDown() then
             hisBox2:scroll(-10,0)
         else
             inputBox:setText('')
         end
-    elseif key=='z' and love.keyboard.isDown('lctrl','rctrl') then
+    elseif key=='z' and isCtrlDown() then
         hisType1.code()
-    elseif key=='x' and love.keyboard.isDown('lctrl','rctrl') then
+    elseif key=='x' and isCtrlDown() then
         hisDir1.code()
-    elseif key=='z' and love.keyboard.isDown('lalt','ralt') then
+    elseif key=='z' and isAltDown() then
         hisType2.code()
-    elseif key=='x' and love.keyboard.isDown('lalt','ralt') then
+    elseif key=='x' and isAltDown() then
         hisDir2.code()
     elseif key=='left' or key=='right' then
         -- Do nothing
     else
-        if not WIDGET.isFocus(inputBox) then
-            WIDGET.focus(inputBox)
-            if #key==1 and key:match('[a-z]') then
-                inputBox:addText(key)
-            end
-        end
-        return true
+        WIDGET.focus(inputBox)
+        return
     end
+    return true
 end
 
 function scene.update(dt)

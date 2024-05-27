@@ -21,16 +21,17 @@ function scene.enter()
 end
 
 function scene.keyDown(key,isRep)
-    if isRep then return end
+    if isRep then return true end
     if key=='escape' then
         if TASK.lock('sureBack',1) then
             MSG.new('info',"Press again to quit",1)
         else
-            Zenitha._quit('fade')
+            ZENITHA._quit('fade')
         end
     elseif key=='f6' then
         pcall(love._openConsole)
     end
+    return true
 end
 
 function scene.draw()
@@ -39,7 +40,7 @@ function scene.draw()
     FONT.set(35)
     GC.mStr("By MrZ & Staffhook",500,220)
     FONT.set(30)
-    if 1 or GameData.dailyCount>0 then
+    if GameData.dailyCount>0 then
         GC.printf(GameData.dailyCount,350-130,430,260,'right')
     end
     if GameData.dailyPassed then
@@ -51,6 +52,6 @@ end
 scene.widgetList={
     WIDGET.new{type='button_fill',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=playDaily},
     WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
-    WIDGET.new{type='button_fill',pos={1,1},text='Back',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
+    WIDGET.new{type='button_fill',pos={1,1},text='Quit',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
 }
 return scene

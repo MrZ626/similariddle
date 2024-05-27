@@ -1,11 +1,11 @@
 require'Zenitha'
 
-Zenitha.setAppName('similariddle')
-Zenitha.setVersionText(require"version".string)
-Zenitha.setFirstScene('menu')
-Zenitha.setMaxFPS(40) -- Enough!
-Zenitha.setClickFX(false)
-Zenitha.setDrawCursor(NULL)
+ZENITHA.setAppName('similariddle')
+ZENITHA.setVersionText(require"version".string)
+ZENITHA.setFirstScene('menu')
+ZENITHA.setMaxFPS(40) -- Enough!
+ZENITHA.globalEvent.clickFX=NULL
+ZENITHA.globalEvent.drawCursor=NULL
 
 love.keyboard.setKeyRepeat(true)
 if MOBILE then
@@ -325,7 +325,7 @@ end
 function LoadData()
     print("LoadData")
     local suc,res=pcall(FILE.load,'save.dat','-luaon')
-    if suc then TABLE.update(res,GameData) end
+    if suc then TABLE.update(GameData,res) end
 end
 LoadData()
 love.filesystem.remove('guesses.dat')
