@@ -61,22 +61,32 @@ do -- Load words
         FILE.load('lib_gre.txt','-string'):split('\r\n'),
         FILE.load('lib_full.txt','-string'):split('\r\n'),
     }
-    WordHashMap={}
-    AnswerWordList={} -- Temp list, for sorting by simmilarity
+    AnsWordHashMap={}
+    ---@class Similariddle.word
+    ---@field word string
+    ---@field _score number
+    ---@field src string
+
+    ---@type Similariddle.word[]
+    AnsWordList={} -- Temp list, for sorting by simmilarity
     for libID,lib in next,WordLib do
         for i=1,#lib do
             lib[i]=lib[i]:lower()
-            if not WordHashMap[lib[i]] then
-                WordHashMap[lib[i]]=libID
-                if libID<5 then
-                    table.insert(AnswerWordList,{lib[i]})
+            if not AnsWordHashMap[lib[i]] then
+                AnsWordHashMap[lib[i]]=libID
+                if libID<=4 then
+                    table.insert(AnsWordList,{
+                        word=lib[i],
+                        src=({'CET4','CET6','TEM8','GRE'})[libID],
+                    })
                 end
             end
         end
     end
     collectgarbage()
 
-    -- local finding="aux"
+    -- Count how many words end with [finding]
+    -- local finding="ing"
     -- local count=0
     -- for i=1,#AnswerWordList do
     --     if AnswerWordList[i][1]:sub(-#finding)==finding then

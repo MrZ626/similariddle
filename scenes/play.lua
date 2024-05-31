@@ -23,7 +23,7 @@
 --- @field size number
 --- @field color Zenitha.Color
 
-local testWord
+local debug
 
 local GC=GC
 local gc=love.graphics
@@ -131,7 +131,7 @@ local function guess(w,giveup)
         MSG.new('info',"Input in a English word then press enter",0.5)
         return
     end
-    if not WordHashMap[w] then
+    if not AnsWordHashMap[w] then
         MSG.new('info',"Word \""..w.."\" doesn't exist",0.5)
         return
     end
@@ -172,10 +172,10 @@ local function guess(w,giveup)
     if ansListRank then
         rank=ansListRank
     else
-        local l,r=1,#AnswerWordList
+        local l,r=1,#AnsWordList
         while l<r do
             local m=floor((l+r)/2)
-            if score<AnswerWordList[m][2] then
+            if score<AnsWordList[m].score then
                 l=m+1
             else
                 r=m
@@ -275,9 +275,17 @@ local scene={}
 
 function scene.enter()
     data=TABLE.copyAll(SCN.args[1])
-    if testWord then
-        data.word=testWord
-        for k,v in next,data do print(k,v)end
+
+    debug=love.keyboard.isDown('lctrl','rctrl')
+    if debug then
+        pcall(love._openConsole)
+        local text=love.system.getClipboardText()
+        if type(text)=='string' then
+            text=STRING.trim(text):lower()
+            if not text:find('[^a-zA-Z]') then
+                data.word=text
+            end
+        end
     end
 
     result=false
@@ -290,23 +298,33 @@ function scene.enter()
     lastInput=""
     TABLE.clear(particles)
 
+    -- Calculate score and sort
     local model,word=data.model,data.word
-    for i=1,#AnswerWordList do
-        local w=AnswerWordList[i]
-        w[2]=(#w[1]<=#word/2 or #w[1]>=#word*2) and -26 or GetSimilarity(model,word,w[1])
+    for i=1,#AnsWordList do
+        local w=AnsWordList[i]
+        w._score=(#w.word<=#word/2 or #w.word>=#word*2) and -26 or GetSimilarity(model,word,w.word)
     end
-    table.sort(AnswerWordList,function(a,b) return a[2]>b[2] end)
+    table.sort(AnsWordList,function(a,b) return a._score>b._score end)
+
+    -- Generate ranks
     local prev={"MrZ",26}
-    for i=1,#AnswerWordList do
-        local cur=AnswerWordList[i]
-        wordRankHashtable[cur[1]]=cur[2]==prev[2] and wordRankHashtable[prev[1]] or i
+    for i=1,#AnsWordList do
+        local cur=AnsWordList[i]
+        wordRankHashtable[cur.word]=cur._score==prev._score and wordRankHashtable[prev.word] or i
         prev=cur
     end
     collectgarbage()
 
-    if testWord then
-        for i=1,100 do print(AnswerWordList[i][1],AnswerWordList[i][2]) end
-        testWord=nil
+    if debug then
+        print("--------------------------")
+        for i=1,100 do
+            local w=AnsWordList[i]
+            print(w.src,w.word..string.rep(" ",8-#w.word),("%.4f%%"):format(w._score*100),string.rep("O",w._score*26))
+        end
+        TASK.new(function()
+            DEBUG.yieldUntilNextScene()
+            SCN.back()
+        end)
     end
 
     setSortTitle(1,"score")
