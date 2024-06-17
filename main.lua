@@ -181,62 +181,90 @@ do -- Game code
 
     local function combMatch(model,s1,s2)
         assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
-        local len=#s1
+        local length=#STRING.trim(s1)
         local t1,t2={},{}
-        for i=1,len do
+        for i=1,#s1 do
             t1[i]=s1:sub(i,i)
             t2[i]=s2:sub(i,i)
         end
         local score=0
-        for i=1,len do
-            for _=0,1 do -- for swap t1 and t2 then try again
-                local n=0
-                while true do
-                    if t1[i]==t2[i+n] then
-                        -- if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
-                        -- score=score+modelFunc(len,n)
-                        if model==1 then
-                            -- Trisected principle
-                            score=score+math.max(1-math.abs(n)/3,0)
-                        elseif model==2 then
-                            -- Arithmetic typewriter
-                            score=score+1/(math.abs(n)+1)
-                        elseif model==3 then
-                            -- Pirate ship
-                            local decay,weight
-                            if i==1 or i==#t1 then
-                                decay,weight=1.5,3
-                            elseif i==2 or i==#t1-1 then
-                                decay,weight=3,2
-                            else
-                                decay,weight=6,1
-                            end
-
-                            score=score+math.max(1-math.abs(n)/decay,0)*weight
-                        elseif model==4 then
-                            -- Weaving logic (not implemented here)
-                        elseif model==5 then
-                            -- Graceful failure
-                            score=score+1-math.abs(n)/len/2
-                        elseif model==6 then
-                            -- Stable maintenance (not designed yet)
-                            score=0
+        for i=1,#s1 do
+            local n=0
+            while true do
+                if t1[i]~=' ' and t2[i+n]~=' ' and t1[i]==t2[i+n] then
+                    -- if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
+                    -- score=score+modelFunc(len,n)
+                    if model==1 then
+                        -- Consecutive Prize (not implemented here)
+                    elseif model==2 then
+                        -- Trisected principle
+                        score=score+math.max(1-math.abs(n)/3,0)
+                    elseif model==3 then
+                        -- Arithmetic typewriter
+                        score=score+1/(math.abs(n)+1)
+                    elseif model==4 then
+                        -- Pirate ship
+                        local decay,weight
+                        if i==1 or i==#t1 then       decay,weight=1.5,3
+                        elseif i==2 or i==#t1-1 then decay,weight=3,2
+                        else                         decay,weight=6,1
                         end
-                        break
+                        score=score+math.max(1-math.abs(n)/decay,0)*weight
+                    elseif model==5 then
+                        -- Weaving logic (not implemented here)
+                    elseif model==6 then
+                        -- Graceful failure
+                        score=score+1-math.abs(n)/length/2
+                    elseif model==7 then
+                        -- Stable maintenance (not designed yet)
+                        score=0
                     end
-                    n=n<1 and -n+1 or -n -- 0,-1,1,-2,2,...
-                    if n>=len then
-                        break
-                    end
+                    break
                 end
-                t1,t2=t2,t1 -- swap
+                n=n<1 and -n+1 or -n -- 0,-1,1,-2,2,...
+                if n>=length then
+                    break
+                end
             end
         end
-        if model==3 then
-            local totalWeight=3+2+(len-4)+2+3
-            score=score/totalWeight*len
+        if model==4 then
+            local totalWeight=3+2+(length-4)+2+3
+            score=score/totalWeight*length
         end
-        return score/len/2
+        return score/length
+    end
+    local function model1comp(ans,try)
+        -- if love.keyboard.isDown('lshift') then
+        --     print("."..ans..".","."..try..".")
+        -- end
+
+        local LEN=#STRING.trim(ans)
+        local total=0
+
+        local tryS,tryE=try:find('%S+')
+        local ansS,ansE=ans:find('%S+')
+        for i=tryS,tryE do
+            local core=try:byte(i)
+            local maxPoint=0
+            for j=ansS,ansE do
+                if ans:byte(j)==core then
+                    local extL,extR=1,1
+                    while i-extL>0     and j-extL>0     and try:byte(i-extL)~=32 and try:byte(i-extL)==ans:byte(j-extL) do extL=extL+1 end
+                    while i+extR<=#try and j+extR<=#ans and try:byte(i+extR)~=32 and try:byte(i+extR)==ans:byte(j+extR) do extR=extR+1 end
+                    local len=extL+extR-1
+
+                    local base=(len+LEN-2)/(len*(len-1)+LEN*(LEN-1))
+                    local dist=math.abs(i-j)+1
+                    local point=base/dist
+                    if point>maxPoint then
+                        -- print(i,j,len,maxPoint.." -> "..point)
+                        maxPoint=point
+                    end
+                end
+            end
+            total=total+maxPoint
+        end
+        return total
     end
     local function editDist(s1,s2) -- By Copilot
         local len1,len2=#s1,#s2
@@ -258,20 +286,47 @@ do -- Game code
         return dp[len1][len2]
     end
     function GetSimilarity(model,w1,w2)
-        local final
-        if model==4 then
+        local total=0
+        if model==5 then
             local dist=editDist(w1,w2)
-            final=1-(dist/#w1+dist/#w2)/2
-        else
-            local maxSimilarity=-1e99
-            local short,long=#w1<#w2 and w1 or w2,#w1<#w2 and w2 or w1
-
-            for i=1,#long-#short+1 do
-                maxSimilarity=math.max(maxSimilarity,combMatch(model,short,long:sub(i,i+#short-1))-(#long-#short)/#long)
+            total=1-(dist/#w1+dist/#w2)/2
+        elseif model==1 then
+            local l1,l2=#w1,#w2
+            local _w1=(' '):rep(l2-1)..w1
+            local _w2=w2..(' '):rep(l1-1)
+            for _=1,l1+l2-1 do
+                -- print(_w1,_w2,model1comp(_w1,_w2))
+                total=math.max(total,model1comp(_w1,_w2))
+                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
             end
-            final=maxSimilarity
+        else
+            local l1,l2=#w1,#w2
+            local _w1=(' '):rep(l2-1)..w1
+            local _w2=w2..(' '):rep(l1-1)
+            for _=1,l1+l2-1 do
+                total=math.max(total,combMatch(model,_w1,_w2))
+                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
+            end
+
+            local total2=0
+            _w1=(' '):rep(l1-1)..w2
+            _w2=w1..(' '):rep(l2-1)
+            for _=1,l1+l2-1 do
+                total2=math.max(total2,combMatch(model,_w1,_w2))
+                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
+            end
+            total=(total+total2)/2
         end
-        return final-final%2^-26
+
+        -- Length penalty
+        if model~=5 then
+            local shortL,longL=#w1,#w2
+            if shortL>longL then shortL,longL=longL,shortL end
+            total=total-(longL-shortL)/longL
+        end
+
+        -- Round total score to 1/2^26
+        return total-total%(2^-26)
     end
 end
 

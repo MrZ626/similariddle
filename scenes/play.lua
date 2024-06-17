@@ -175,7 +175,7 @@ local function guess(w,giveup)
         local l,r=1,#AnsWordList
         while l<r do
             local m=floor((l+r)/2)
-            if score<AnsWordList[m].score then
+            if score<AnsWordList[m]._score then
                 l=m+1
             else
                 r=m
