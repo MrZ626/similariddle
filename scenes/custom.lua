@@ -2,7 +2,7 @@ local optionNames={
     lib={'CET4','CET6','TEM8','GRE'},
     len={'Short','Medium','Long','Loooooong'},
     model={'Trivial','Easy','Medium','Hard','Extreme','Hell','Truth'},
-    algorithm={'Consecutive Prize','Trisected principle','Arithmetic typewriter','Pirate ship','Weaving logic','Graceful failure','Stable maintenance'},
+    algorithm={'Consecutive Prize','Trisected Principle','Arithmetic Typewriter','Pirate Ship','Weaving Logic','Graceful Failure','Stable Maintenance'},
     colors={COLOR.lC,COLOR.lG,COLOR.lY,COLOR.O,COLOR.R,COLOR.M,COLOR.lD},
 }
 

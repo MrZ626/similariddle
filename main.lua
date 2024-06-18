@@ -197,26 +197,26 @@ do -- Game code
                     if model==1 then
                         -- Consecutive Prize (not implemented here)
                     elseif model==2 then
-                        -- Trisected principle
+                        -- Trisected Principle
                         score=score+math.max(1-math.abs(n)/3,0)
                     elseif model==3 then
-                        -- Arithmetic typewriter
+                        -- Arithmetic Typewriter
                         score=score+1/(math.abs(n)+1)
                     elseif model==4 then
-                        -- Pirate ship
+                        -- Pirate Ship
                         local decay,weight
-                        if i==1 or i==#t1 then       decay,weight=1.5,3
+                        if     i==1 or i==#t1   then decay,weight=1.5,3
                         elseif i==2 or i==#t1-1 then decay,weight=3,2
                         else                         decay,weight=6,1
                         end
                         score=score+math.max(1-math.abs(n)/decay,0)*weight
                     elseif model==5 then
-                        -- Weaving logic (not implemented here)
+                        -- Weaving Logic (not implemented here)
                     elseif model==6 then
-                        -- Graceful failure
+                        -- Graceful Failure
                         score=score+1-math.abs(n)/length/2
                     elseif model==7 then
-                        -- Stable maintenance (not designed yet)
+                        -- Stable Maintenance (not designed yet)
                         score=0
                     end
                     break
