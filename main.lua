@@ -179,9 +179,11 @@ do -- Game code
         })
     end
 
+    local max,min=math.max,math.min
+    local abs=math.abs
     local function combMatch(model,s1,s2)
         assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
-        local length=#STRING.trim(s1)
+        local length=max(#STRING.trim(s1),#STRING.trim(s2))
         local t1,t2={},{}
         for i=1,#s1 do
             t1[i]=s1:sub(i,i)
@@ -191,17 +193,15 @@ do -- Game code
         for i=1,#s1 do
             local n=0
             while true do
-                if t1[i]~=' ' and t2[i+n]~=' ' and t1[i]==t2[i+n] then
-                    -- if love.keyboard.isDown('lshift') then print(modelFunc(len,n)) end
-                    -- score=score+modelFunc(len,n)
+                if t1[i]~=' ' and t1[i]==t2[i+n] then
                     if model==1 then
                         -- Consecutive Prize (not implemented here)
                     elseif model==2 then
                         -- Trisected Principle
-                        score=score+math.max(1-math.abs(n)/3,0)
+                        score=score+max(1-abs(n)/3,0)
                     elseif model==3 then
                         -- Arithmetic Typewriter
-                        score=score+1/(math.abs(n)+1)
+                        score=score+1/(abs(n)+1)
                     elseif model==4 then
                         -- Pirate Ship
                         local decay,weight
@@ -209,12 +209,12 @@ do -- Game code
                         elseif i==2 or i==#t1-1 then decay,weight=3,2
                         else                         decay,weight=6,1
                         end
-                        score=score+math.max(1-math.abs(n)/decay,0)*weight
+                        score=score+max(1-abs(n)/decay,0)*weight
                     elseif model==5 then
                         -- Weaving Logic (not implemented here)
                     elseif model==6 then
                         -- Graceful Failure
-                        score=score+1-math.abs(n)/length/2
+                        score=score+1-abs(n)/length/2
                     elseif model==7 then
                         -- Stable Maintenance (not designed yet)
                         score=0
@@ -222,7 +222,7 @@ do -- Game code
                     break
                 end
                 n=n<1 and -n+1 or -n -- 0,-1,1,-2,2,...
-                if n>=length then
+                if n>length then
                     break
                 end
             end
@@ -238,7 +238,7 @@ do -- Game code
         --     print("."..ans..".","."..try..".")
         -- end
 
-        local LEN=#STRING.trim(ans)
+        local LEN=max(#STRING.trim(ans),#STRING.trim(try))
         local total=0
 
         local tryS,tryE=try:find('%S+')
@@ -254,7 +254,7 @@ do -- Game code
                     local len=extL+extR-1
 
                     local base=(len+LEN-2)/(len*(len-1)+LEN*(LEN-1))
-                    local dist=math.abs(i-j)+1
+                    local dist=abs(i-j)+1
                     local point=base/dist
                     if point>maxPoint then
                         -- print(i,j,len,maxPoint.." -> "..point)
@@ -280,7 +280,7 @@ do -- Game code
 
         for i=1,len1 do
             for j=1,len2 do
-                dp[i][j]=t1[i]==t2[j] and dp[i-1][j-1] or math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1
+                dp[i][j]=t1[i]==t2[j] and dp[i-1][j-1] or min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1
             end
         end
         return dp[len1][len2]
@@ -296,7 +296,7 @@ do -- Game code
             local _w2=w2..(' '):rep(l1-1)
             for _=1,l1+l2-1 do
                 -- print(_w1,_w2,model1comp(_w1,_w2))
-                total=math.max(total,model1comp(_w1,_w2))
+                total=max(total,model1comp(_w1,_w2))
                 if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
             end
         else
@@ -304,30 +304,38 @@ do -- Game code
             local _w1=(' '):rep(l2-1)..w1
             local _w2=w2..(' '):rep(l1-1)
             for _=1,l1+l2-1 do
-                total=math.max(total,combMatch(model,_w1,_w2))
+                -- print(_w1,_w2,combMatch(model,_w1,_w2))
+                total=max(total,combMatch(model,_w1,_w2))
                 if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
             end
+            -- print("T1 ",total)
 
             local total2=0
             _w1=(' '):rep(l1-1)..w2
             _w2=w1..(' '):rep(l2-1)
             for _=1,l1+l2-1 do
-                total2=math.max(total2,combMatch(model,_w1,_w2))
+                -- print(_w1,_w2,combMatch(model,_w1,_w2))
+                total2=max(total2,combMatch(model,_w1,_w2))
                 if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
             end
+            -- print("T2 ",total2)
             total=(total+total2)/2
         end
 
-        -- Length penalty
-        if model~=5 then
-            local shortL,longL=#w1,#w2
-            if shortL>longL then shortL,longL=longL,shortL end
-            total=total-(longL-shortL)/longL
-        end
+        -- Length penalty (deprecated)
+        -- if model~=5 then
+        --     local shortL,longL=#w1,#w2
+        --     if shortL>longL then shortL,longL=longL,shortL end
+        --     total=total-(longL-shortL)/longL
+        -- end
 
         -- Round total score to 1/2^26
         return total-total%(2^-26)
     end
+    -- print(GetSimilarity(1,"expensive","expansive"))
+    -- print(GetSimilarity(3,"routine","pristine"))
+    -- print(combMatch(3,"pristine"," routine"))
+    -- print(combMatch(3," routine","pristine"))
 end
 
 -- Title
