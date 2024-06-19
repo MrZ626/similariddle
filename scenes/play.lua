@@ -126,6 +126,45 @@ local function updateViewHis(guess,id)
     end
 end
 
+local function answerColor(score)
+    if score<=0.3 then
+        score=MATH.iLerp(0,0.3,score)
+        return
+        {COLOR.HSL(
+            MATH.lerp(0.00,0.15,score),
+            MATH.lerp(1.00,1.00,score),
+            MATH.lerp(0.50,0.50,score),
+            0.3
+        )}
+    elseif score<=0.6 then
+        score=MATH.iLerp(0.3,0.6,score)
+        return
+        {COLOR.HSL(
+            MATH.lerp(0.15,0.25,score),
+            MATH.lerp(1.00,1.00,score),
+            MATH.lerp(0.50,0.60,score),
+            0.3
+        )}
+    elseif score<=1 then
+        score=MATH.iLerp(0.6,1.0,score)
+        return
+        {COLOR.HSL(
+            MATH.lerp(0.25,0.35,score),
+            MATH.lerp(1.00,1.00,score),
+            MATH.lerp(0.60,0.55,score),
+            0.3
+        )}
+    else
+        score=MATH.iLerp(1.0,1.05,score)
+        return
+        {COLOR.HSL(
+            MATH.lerp(0.35,0.75,score),
+            MATH.lerp(1.00,1.00,score),
+            MATH.lerp(0.55,0.70,score),
+            0.3
+        )}
+    end
+end
 local function guess(w,giveup)
     if #w==0 then
         MSG.new('info',"Input in a English word then press enter",0.5)
@@ -191,12 +230,21 @@ local function guess(w,giveup)
         info=info,
         rank=rank<1000 and rank or floor(rank/1000).."k",
         textObj=gc.newText(getFont(25),w),
-        bgColor={1-score,1+score,1-math.abs(score),.26},
+        bgColor=answerColor(score),
         rankColor=ansListRank and COLOR.L or COLOR.LD,
         idFont=id<100 and 15 or id<1000 and 10 or 7,
         wordLight="",
         textObjLight=gc.newText(getFont(25),""),
     }
+    if w~=data.word and score>0.9999 then
+        local g=lastGuess
+        local oldScore=g.score
+        TWEEN.new(function(v)
+            local s=MATH.lerp(oldScore,0.9999,v)
+            g.bgColor=answerColor(s)
+            g.info=string.format("%.2f%%",100*s)
+        end):setEase('Linear'):setDuration(2.6):run()
+    end
     history[id]=lastGuess -- [number]
     history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
@@ -411,34 +459,34 @@ function scene.keyDown(key,isRep)
             SCN.back()
         end
     -- elseif key=='h' then
-    --     guess("wart")
-    --     guess("poker")
-    --     guess("cooker")
-    --     guess("warmer")
-    --     guess("walk")
-    --     guess("walking")
-    --     guess("walks")
-    --     guess("walkers")
-    --     guess("walker")
-    --     guess("parker")
-    --     guess("workers")
-    --     guess("working")
-    --     guess("worked")
-    --     guess("warper")
-    --     guess("warping")
-    --     guess("taking")
-    --     guess("take")
-    --     guess("taked")
-    --     guess("taker")
-    --     guess("takers")
-    --     guess("talk")
-    --     guess("talked")
-    --     guess("talker")
-    --     guess("talkers")
-    --     guess("talking")
-    --     guess("berk")
-    --     guess("lerp")
-    --     -- 583e2d1
+        -- guess("wart")
+        -- guess("poker")
+        -- guess("cooker")
+        -- guess("warmer")
+        -- guess("walk")
+        -- guess("walking")
+        -- guess("walks")
+        -- guess("walkers")
+        -- guess("walker")
+        -- guess("parker")
+        -- guess("workers")
+        -- guess("working")
+        -- guess("worked")
+        -- guess("warper")
+        -- guess("warping")
+        -- guess("taking")
+        -- guess("take")
+        -- guess("taked")
+        -- guess("taker")
+        -- guess("takers")
+        -- guess("talk")
+        -- guess("talked")
+        -- guess("talker")
+        -- guess("talkers")
+        -- guess("talking")
+        -- guess("berk")
+        -- guess("lerp")
+        -- 583e2d1
     elseif key=='up' then
         if isCtrlDown() then
             hisBox1:scroll(10,0)
