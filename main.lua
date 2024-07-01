@@ -179,6 +179,7 @@ do -- Game code
         })
     end
 
+    local sub,find,byte,rep=string.sub,string.find,string.byte,string.rep
     local max,min=math.max,math.min
     local abs=math.abs
     local function combMatch(model,s1,s2)
@@ -186,8 +187,8 @@ do -- Game code
         local length=max(#STRING.trim(s1),#STRING.trim(s2))
         local t1,t2={},{}
         for i=1,#s1 do
-            t1[i]=s1:sub(i,i)
-            t2[i]=s2:sub(i,i)
+            t1[i]=sub(s1,i,i)
+            t2[i]=sub(s2,i,i)
         end
         local score=0
         for i=1,#s1 do
@@ -203,13 +204,8 @@ do -- Game code
                         -- Arithmetic Typewriter
                         score=score+1/(abs(n)+1)
                     elseif model==4 then
-                        -- Pirate Ship
-                        local decay,weight
-                        if     i==1 or i==#t1   then decay,weight=1.5,3
-                        elseif i==2 or i==#t1-1 then decay,weight=3,2
-                        else                         decay,weight=6,1
-                        end
-                        score=score+max(1-abs(n)/decay,0)*weight
+                        -- Pirate Ship (scoring part)
+                        score=score+1/(abs(n)+1)
                     elseif model==5 then
                         -- Weaving Logic (not implemented here)
                     elseif model==6 then
@@ -227,13 +223,9 @@ do -- Game code
                 end
             end
         end
-        if model==4 then
-            local totalWeight=3+2+(length-4)+2+3
-            score=score/totalWeight*length
-        end
         return score/length
     end
-    local function model1comp(ans,try)
+    local function model1comp(ans,try) -- Consecutive Prize
         -- if love.keyboard.isDown('lshift') then
         --     print("."..ans..".","."..try..".")
         -- end
@@ -241,16 +233,16 @@ do -- Game code
         local LEN=max(#STRING.trim(ans),#STRING.trim(try))
         local total=0
 
-        local tryS,tryE=try:find('%S+')
-        local ansS,ansE=ans:find('%S+')
+        local tryS,tryE=find(try,'%S+')
+        local ansS,ansE=find(ans,'%S+')
         for i=tryS,tryE do
-            local core=try:byte(i)
+            local core=byte(try,i)
             local maxPoint=0
             for j=ansS,ansE do
-                if ans:byte(j)==core then
+                if byte(ans,j)==core then
                     local extL,extR=1,1
-                    while i-extL>0     and j-extL>0     and try:byte(i-extL)~=32 and try:byte(i-extL)==ans:byte(j-extL) do extL=extL+1 end
-                    while i+extR<=#try and j+extR<=#ans and try:byte(i+extR)~=32 and try:byte(i+extR)==ans:byte(j+extR) do extR=extR+1 end
+                    while i-extL>0     and j-extL>0     and byte(try,i-extL)~=32 and byte(try,i-extL)==byte(ans,j-extL) do extL=extL+1 end
+                    while i+extR<=#try and j+extR<=#ans and byte(try,i+extR)~=32 and byte(try,i+extR)==byte(ans,j+extR) do extR=extR+1 end
                     local len=extL+extR-1
 
                     local base=(len+LEN-2)/(len*(len-1)+LEN*(LEN-1))
@@ -266,11 +258,11 @@ do -- Game code
         end
         return total
     end
-    local function editDist(s1,s2) -- By Copilot
+    local function model5comp(s1,s2) -- Edit distance By Copilot
         local len1,len2=#s1,#s2
         local t1,t2={},{}
-        for i=1,len1 do t1[i]=s1:sub(i,i) end
-        for i=1,len2 do t2[i]=s2:sub(i,i) end
+        for i=1,len1 do t1[i]=sub(s1,i,i) end
+        for i=1,len2 do t2[i]=sub(s2,i,i) end
 
         local dp={}
         for i=0,len1 do dp[i]=TABLE.new(0,len2) end
@@ -286,19 +278,37 @@ do -- Game code
         return dp[len1][len2]
     end
     function GetSimilarity(model,w1,w2)
+        if model==4 then
+            -- Pirate Ship
+            w1=
+                rep(sub(w1,1,1),4)..
+                rep(sub(w1,2,2),2)..
+                (#w1>4 and sub(w1,3,-3) or "")..
+                rep(sub(w1,-2,-2),2)..
+                rep(sub(w1,-1,-1),4)
+            w2=
+                rep(sub(w2,1,1),4)..
+                rep(sub(w2,2,2),2)..
+                (#w2>4 and sub(w2,3,-3) or "")..
+                rep(sub(w2,-2,-2),2)..
+                rep(sub(w2,-1,-1),4)
+        end
+
         local total=0
-        if model==5 then
-            local dist=editDist(w1,w2)
-            total=1-(dist/#w1+dist/#w2)/2
-        elseif model==1 then
+        if model==1 then
+            -- Consecutive Prize
             local l1,l2=#w1,#w2
             local _w1=(' '):rep(l2-1)..w1
             local _w2=w2..(' '):rep(l1-1)
             for _=1,l1+l2-1 do
                 -- print(_w1,_w2,model1comp(_w1,_w2))
                 total=max(total,model1comp(_w1,_w2))
-                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
+                if sub(_w2,-1)==' ' then _w2=' '..sub(_w2,1,-2) else _w1=sub(_w1,2)..' ' end
             end
+        elseif model==5 then
+            -- Weaving Logic
+            local dist=model5comp(w1,w2)
+            total=1-(dist/#w1+dist/#w2)/2
         else
             local l1,l2=#w1,#w2
             local _w1=(' '):rep(l2-1)..w1
@@ -306,7 +316,7 @@ do -- Game code
             for _=1,l1+l2-1 do
                 -- print(_w1,_w2,combMatch(model,_w1,_w2))
                 total=max(total,combMatch(model,_w1,_w2))
-                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
+                if sub(_w2,-1)==' ' then _w2=' '..sub(_w2,1,-2) else _w1=sub(_w1,2)..' ' end
             end
             -- print("T1 ",total)
 
@@ -316,7 +326,7 @@ do -- Game code
             for _=1,l1+l2-1 do
                 -- print(_w1,_w2,combMatch(model,_w1,_w2))
                 total2=max(total2,combMatch(model,_w1,_w2))
-                if _w2:sub(-1)==' ' then _w2=' '.._w2:sub(1,-2) else _w1=_w1:sub(2)..' ' end
+                if sub(_w2,-1)==' ' then _w2=' '..sub(_w2,1,-2) else _w1=sub(_w1,2)..' ' end
             end
             -- print("T2 ",total2)
             total=(total+total2)/2
