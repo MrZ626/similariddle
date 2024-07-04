@@ -1,5 +1,5 @@
 local function playDaily()
-    local day=os.date("%Y")*366+os.date("%j")
+    local day=os.date("!%Y")*366+os.date("!%j")
     math.randomseed(day)
     for _=1,26 do math.random() end
     local lib=MATH.randFreq{7,2,1,0}

@@ -351,7 +351,7 @@ end
 -- Title
 TitleString="Similariddle"
 FakeTitleString="Similariddle"
-math.randomseed(tonumber(os.date('%Y%m%d')))
+math.randomseed(tonumber(os.date('!%Y%m%d')))
 repeat
     local r=math.random(3)
     if r==1 then
@@ -389,12 +389,12 @@ end
 
 -- Saving
 GameData={
-    date=os.date("%Y%m%d"),
+    date=os.date("!%Y%m%d"),
     dailyPassed=false,
     dailyCount=0,
 }
 function CheckDate()
-    local date=os.date("%Y%m%d")
+    local date=os.date("!%Y%m%d")
     if date~=GameData.date then
         GameData.date=date
         GameData.dailyPassed=false
