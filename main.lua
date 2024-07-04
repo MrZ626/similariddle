@@ -395,7 +395,7 @@ GameData={
 }
 function CheckDate()
     local date=os.date("!%Y%m%d")
-    if date~=GameData.date then
+    if date>GameData.date then
         GameData.date=date
         GameData.dailyPassed=false
         SaveData()

@@ -14,9 +14,17 @@ local function playDaily()
     })
 end
 
+-- for day=-10,10 do
+--     math.randomseed(2024*366+day)
+--     for _=1,26 do math.random() end
+--     local lib=MATH.randFreq{7,2,1,0}
+--     local wordLib=WordLib[lib]
+--     print(wordLib[math.random(1,#wordLib)])
+-- end
+
 local scene={}
 
-function scene.enter()
+function scene.load()
     CheckDate()
 end
 

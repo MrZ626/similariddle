@@ -321,7 +321,7 @@ local savedWidgets={inputBox,hisBox1,hisType1,hisDir1,hisBox2,hisType2,hisDir2}
 ---@type Zenitha.Scene
 local scene={}
 
-function scene.enter()
+function scene.load()
     data=TABLE.copyAll(SCN.args[1])
 
     debug=love.keyboard.isDown('lctrl','rctrl')
@@ -386,7 +386,7 @@ function scene.enter()
 
     MSG.setSafeY(70)
 end
-function scene.leave()
+function scene.unload()
     MSG.setSafeY(0)
 end
 
