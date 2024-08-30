@@ -84,7 +84,7 @@ local function listDrawFunc(item)
     gc_printf(item.info,0,8,wordW-5,'right')
 end
 
---- @type table current game's params (word & settings)
+--- @type Similariddle.LevelData current game's params (word & settings)
 local data
 --- @type table<string,number>
 local wordRankHashtable={}

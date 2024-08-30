@@ -25,13 +25,34 @@ scene.widgetList={
     WIDGET.new{type='slider',x=250,y=220,w=500,axis={1,4,1},labelDistance=40,textAlwaysShow=true,disp=function() return lib   end,valueShow=function(s) return optionNames.lib[s._pos0] end,code=function(i) lib=i end},
     WIDGET.new{type='slider',x=250,y=300,w=500,axis={1,4,1},labelDistance=40,textAlwaysShow=true,disp=function() return len   end,valueShow=function(s) return optionNames.len[s._pos0] end,code=function(i) len=i end},
     WIDGET.new{type='slider',x=250,y=380,w=500,axis={1,6,1},labelDistance=40,textAlwaysShow=true,disp=function() return model end,valueShow=function(s) return optionNames.model[s._pos0] end,code=function(i) model=i end},
-    WIDGET.new{type='button_fill',x=450,y=500,w=260,h=90,fontSize=50,text="Start",code=function() NewGame(lib,len,model) end},
+    WIDGET.new{type='button_fill',x=450,y=500,w=260,h=90,fontSize=50,text="Start",code=function()
+        local LengthLevel={
+            {4,6},
+            {7,9},
+            {10,12},
+            {13,62},
+        }
+        local wordLib=WordLib[lib]
+        math.randomseed(os.time())
+        local word
+        repeat
+            word=wordLib[math.random(1,#wordLib)]
+        until #word>=LengthLevel[len][1] and #word<=LengthLevel[len][2]
+        StartGame{
+            daily=false,
+            fixed=false,
+            word=word,
+            lib=lib,
+            len=len,
+            model=model,
+        }
+    end},
     WIDGET.new{type='button_fill',x=640,y=500,w=90,fontSize=25,color='lB',text="Code",code=function()
         local code=love.system.getClipboardText()
         if code then code=code:trim() end
         local success,data=pcall(ParseCode,code)
         if success then
-            SCN.go('play',nil,data)
+            StartGame(data)
             MSG.new('check',"Riddle code loaded!")
         else
             MSG.new('error',"Invalid riddle code: "..(code and #code>0 and code or "?"),1)

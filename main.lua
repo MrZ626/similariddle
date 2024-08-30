@@ -36,6 +36,19 @@ WIDGET._prototype.slider._approachSpeed=260
     输出hex(n*X)
 ]]
 
+---@class Similariddle.LevelData
+---@field daily boolean
+---@field fixed boolean
+---@field word string
+---@field lib number
+---@field len number
+---@field model number
+
+---@class Similariddle.word
+---@field word string
+---@field _score number
+---@field src string
+
 do -- Load words
     local Primes={2}
     do
@@ -62,10 +75,6 @@ do -- Load words
         FILE.load('lib_full.txt','-string'):split('\r\n'),
     }
     AnsWordHashMap={}
-    ---@class Similariddle.word
-    ---@field word string
-    ---@field _score number
-    ---@field src string
 
     ---@type Similariddle.word[]
     AnsWordList={} -- Temp list, for sorting by simmilarity
@@ -147,6 +156,7 @@ do -- Load words
         local word=WordLib[_lib][_id]
         -- print("word: "..word)
         return {
+            daily=false,
             fixed=true,
             word=word,
             lib=_lib,
@@ -155,30 +165,12 @@ do -- Load words
         }
     end
 end
-do -- Game code
-    local LengthLevel={
-        {4,6},
-        {7,9},
-        {10,12},
-        {13,62},
-    }
-    function NewGame(lib,len,model)
-        local wordLib=WordLib[lib]
-        math.randomseed(os.time())
-        local word
-        repeat
-            word=wordLib[math.random(1,#wordLib)]
-        until #word>=LengthLevel[len][1] and #word<=LengthLevel[len][2]
-        SCN.go('play',nil,{
-            daily=false,
-            fixed=false,
-            word=word,
-            lib=lib,
-            len=len,
-            model=model,
-        })
-    end
 
+do -- Game code
+    ---@param data Similariddle.LevelData
+    function StartGame(data)
+        SCN.go(data.model~=7 and 'play' or 'play_final',nil,data)
+    end
     local sub,find,byte,rep=string.sub,string.find,string.byte,string.rep
     local max,min=math.max,math.min
     local abs=math.abs
@@ -344,6 +336,7 @@ do -- Game code
     end
     -- print(GetSimilarity(1,"expensive","expansive"))
     -- print(GetSimilarity(3,"routine","pristine"))
+    -- print(GetSimilarity(4,"starting","starting"))
     -- print(combMatch(3,"pristine"," routine"))
     -- print(combMatch(3," routine","pristine"))
 end
