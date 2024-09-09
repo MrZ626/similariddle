@@ -370,7 +370,7 @@ function scene.load()
             print(w.src,w.word..string.rep(" ",8-#w.word),("%.4f%%"):format(w._score*100),string.rep("O",w._score*26))
         end
         TASK.new(function()
-            DEBUG.yieldUntilNextScene()
+            TASK.yieldUntilNextScene()
             SCN.back()
         end)
     end
