@@ -17,6 +17,7 @@ SCR.setSize(1000,600)
 SCN.setDefaultSwap('none')
 
 FONT.setDefaultFont('main')
+FONT.setFilter('main','nearest','nearest')
 FONT.load('main','codePixel Regular.ttf')
 
 WIDGET._prototype.base._hoverTimeMax=0.01
