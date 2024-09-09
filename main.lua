@@ -199,10 +199,10 @@ do -- Game code
                         -- Pirate Ship (scoring part)
                         score=score+1/(abs(n)+1)
                     elseif model==5 then
-                        -- Weaving Logic (not implemented here)
-                    elseif model==6 then
                         -- Graceful Failure
                         score=score+1-abs(n)/length/2
+                    elseif model==6 then
+                        -- Weaving Logic (not implemented here)
                     elseif model==7 then
                         -- Stable Maintenance (not designed yet)
                         score=0
@@ -297,7 +297,7 @@ do -- Game code
                 total=max(total,model1comp(_w1,_w2))
                 if sub(_w2,-1)==' ' then _w2=' '..sub(_w2,1,-2) else _w1=sub(_w1,2)..' ' end
             end
-        elseif model==5 then
+        elseif model==6 then
             -- Weaving Logic
             local dist=model5comp(w1,w2)
             total=1-(dist/#w1+dist/#w2)/2
