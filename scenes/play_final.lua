@@ -88,7 +88,7 @@ local guessData={
     img=false,
     state='editing',
 }
-local win
+local win ---@type boolean
 local IoU_curve={}
 
 local guessHis ---@type string[]
@@ -97,7 +97,8 @@ local stampEnabled ---@type boolean
 local stampData ---@type {word:string,img:love.Image,renderStart:number}[][]
 local stampPage ---@type number
 
-local function getWordMap(word)
+---@return boolean[][]
+local function getWordBitMap(word)
     local wordMap={{},{},{},{},{},{},{},{},{}}
     for _,char in next,STRING.atomize(word) do
         local charMap=bitMap[char:byte()-96]
@@ -125,25 +126,25 @@ local function BMtoImage(bm)
     return img
 end
 
-local function clearInputState()
-    if guessData.state~='editing' then
+local function resetInputState(hard)
+    if hard or guessData.state~='editing' then
         guessData.word=""
         guessData.pixelSize=0
         guessData.renderStart=0
         guessData.state='editing'
+        guessHisPointer=#guessHis+1
     end
 end
 
 local floorPhase=0
 local function updateGuessWord(word)
     local _pixelSize=guessData.pixelSize
-    local wordMap=getWordMap(word)
+    local wordMap=getWordBitMap(word)
     guessData.word=word
     guessData.bitMap=wordMap
     guessData.pixelSize=#wordMap[1]
     if #word==0 then
         guessData.renderStart=0
-        guessData.state='editing'
     else
         guessData.img=BMtoImage(wordMap)
         guessData.renderStart=guessData.renderStart-(guessData.pixelSize-_pixelSize)/2
@@ -172,38 +173,42 @@ local function getIoU(bm1,s1,bm2,s2)
     return jiaoCount/bingCount
 end
 
-local function guess(w,hisMode,giveup)
-    if not AnsWordHashMap[w] then
-        MSG.new('info',"Word \""..w.."\" doesn't exist",0.5)
+local function guess(word,hisMode,giveup)
+    if not AnsWordHashMap[word] then
+        MSG.new('info',"Word \""..word.."\" doesn't exist",0.5)
         return
     end
-    local posInHistory=TABLE.find(guessHis,w)
+    local posInHistory=TABLE.find(guessHis,word)
     if posInHistory then
         if not hisMode then
-            MSG.new('info',"You've already guessed \""..w.."\"",0.5)
+            MSG.new('info',"You've already guessed \""..word.."\"",0.5)
         end
-        guessHisPointer=posInHistory
+        rem(guessHis,posInHistory)
     else
-        ins(guessHis,w)
         if #guessHis>26 then
             rem(guessHis,1)
         end
         guessHisPointer=#guessHis
     end
+    ins(guessHis,word)
     TABLE.clear(IoU_curve)
+    local maxPos,maxIoU=0,0
     for x=ansData.renderStart-guessData.pixelSize+1,ansData.renderStart+#ansData.bitMap[1]-1 do
         local IoU=getIoU(ansData.bitMap,ansData.renderStart,guessData.bitMap,x)
         ins(IoU_curve,IoU)
+        if IoU>maxIoU then
+            maxIoU=IoU
+            maxPos=x
+        end
     end
-    if w==levelData.word then
-        if giveup then
-            MSG.new('info',"The answer is \""..levelData.word.."\"",1)
-        else
-            win=true
+    if not win and word==levelData.word then
+        win=true
+        if not giveup then
             MSG.new('check',"Correct!")
         end
     end
     guessData.state='comparing'
+    guessData.renderStart=maxPos
 end
 local function drag(dx)
     guessData.renderStart=MATH.clamp(guessData.renderStart+dx,ansData.renderStart-guessData.pixelSize+1,ansData.renderStart+#ansData.bitMap[1]-1)
@@ -216,16 +221,16 @@ function scene.load()
     levelData=TABLE.copyAll(SCN.args[1])
     ---@cast levelData Similariddle.LevelData
 
-    local wordMap=getWordMap(levelData.word)
+    local wordMap=getWordBitMap(levelData.word)
     ansData.bitMap=wordMap
     ansData.pixelSize=#wordMap[1]
     ansData.renderStart=math.floor(-ansData.pixelSize/2)
     ansData.img=BMtoImage(wordMap)
 
-    updateGuessWord("")
     win=false
     guessHis,guessHisPointer={},1
     stampEnabled,stampData,stampPage=false,{{},{},{},{},{}},1
+    resetInputState(true)
 end
 
 local dragBuffer=0
@@ -255,7 +260,7 @@ function scene.keyDown(key,isRep)
         end
     elseif #key==1 and key:match('[a-z]') then
         if isRep then return end
-        clearInputState()
+        resetInputState()
         updateGuessWord(guessData.word..key)
     elseif key=='up' then
         if isCtrlDown() then
@@ -276,8 +281,7 @@ function scene.keyDown(key,isRep)
                 updateGuessWord(guessHis[guessHisPointer+1])
                 guess(guessHis[guessHisPointer+1],true)
             else
-                guessHisPointer=#guessHis+1
-                updateGuessWord("")
+                resetInputState()
             end
         end
     elseif key=='left' then
@@ -297,7 +301,7 @@ function scene.keyDown(key,isRep)
         if isRep then return true end
         guess(guessData.word,false)
     elseif key=='=' then
-        if isRep then return true end
+        if isRep or win then return true end
         if levelData.daily then
             MSG.new('info','Never gonna give you up~',1)
         elseif TASK.lock("sureGiveup",1) then
@@ -310,12 +314,15 @@ function scene.keyDown(key,isRep)
         if isCtrlDown() then
             stampData[stampPage]={}
         elseif #guessData.word>0 then
-            clearInputState()
+            resetInputState()
             updateGuessWord(guessData.word:sub(1,-2))
         end
     elseif key=='delete' then
-        if guessData.state~='editing' then guessData.word="" end
-        updateGuessWord("")
+        if isCtrlDown() then
+            stampData[stampPage]={}
+        else
+            resetInputState(true)
+        end
     elseif key=='escape' then
         if isRep then return true end
         if TASK.lock('sureBack',1) then
@@ -341,18 +348,21 @@ function scene.draw()
     gc.line(-100,2,100,2)
     gc.line(-100,16,100,16)
     gc.line(-100,30,100,30)
+
+    -- Guess history marks
+    gc.setColor(COLOR.DL)
+    if guessHisPointer>1 then
+        gc.printf("↑",-55,17,100,'center',nil,.18)
+    end
+    if guessHisPointer<=#guessHis then
+        gc.printf("↓",-55,25,100,'center',nil,.18)
+    end
+    if guessHisPointer<=#guessHis then
+        gc.printf(guessHisPointer..'/'..#guessHis,-55,21,100,'center',nil,.18)
+    end
     if guessData.pixelSize>0 then
-        gc.setColor(COLOR.DL)
         gc.draw(arrowImg,-60,19.5)
         gc.draw(arrowImg,60,19.5,nil,-1,1)
-        -- Guess history mark
-        if #guessHis>0 then
-            if guessHisPointer>1 then
-                gc.printf('↑',-55,17,100,'center',nil,.18)
-            end
-            gc.printf('↓',-55,25,100,'center',nil,.18)
-            gc.printf(guessHisPointer..'/'..#guessHis,-55,21,100,'center',nil,.18)
-        end
     end
 
     -- History
