@@ -36,7 +36,7 @@ WIDGET._prototype.slider._approachSpeed=260
     输出hex(n*X)
 ]]
 
----@class Similariddle.LevelData
+---@class Similariddle.LevelData current game's params (word & settings)
 ---@field daily boolean
 ---@field fixed boolean
 ---@field word string

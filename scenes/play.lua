@@ -84,8 +84,8 @@ local function listDrawFunc(item)
     gc_printf(item.info,0,8,wordW-5,'right')
 end
 
---- @type Similariddle.LevelData current game's params (word & settings)
-local data
+--- @type Similariddle.LevelData
+local levelData
 --- @type table<string,number>
 local wordRankHashtable={}
 --- @type string|false
@@ -181,20 +181,20 @@ local function guess(w,giveup)
     end
 
     local score,info,_result
-    if #w<=#data.word/2 or #w>=#data.word*2 then
+    if #w<=#levelData.word/2 or #w>=#levelData.word*2 then
         score=-26
         info="X"
     else
-        score=GetSimilarity(data.model,data.word,w)
+        score=GetSimilarity(levelData.model,levelData.word,w)
         info=string.format("%.2f%%",100*score)
-        if w==data.word then
+        if w==levelData.word then
             if giveup then
                 _result='gaveup'
                 -- TODO: give up
                 info="Give Up"
             else
                 _result='win'
-                if data.daily and not GameData.dailyPassed then
+                if levelData.daily and not GameData.dailyPassed then
                     GameData.dailyPassed=true
                     GameData.dailyCount=GameData.dailyCount+1
                     SaveData()
@@ -236,7 +236,7 @@ local function guess(w,giveup)
         wordLight="",
         textObjLight=gc.newText(getFont(25),""),
     }
-    if w~=data.word and score>0.9999 then
+    if w~=levelData.word and score>0.9999 then
         local g=lastGuess
         local oldScore=g.score
         TWEEN.new(function(v)
@@ -322,7 +322,7 @@ local savedWidgets={inputBox,hisBox1,hisType1,hisDir1,hisBox2,hisType2,hisDir2}
 local scene={}
 
 function scene.load()
-    data=TABLE.copyAll(SCN.args[1])
+    levelData=TABLE.copyAll(SCN.args[1])
 
     debug=love.keyboard.isDown('lctrl','rctrl')
     if debug then
@@ -331,7 +331,7 @@ function scene.load()
         if type(text)=='string' then
             text=STRING.trim(text):lower()
             if not text:find('[^a-zA-Z]') then
-                data.word=text
+                levelData.word=text
             end
         end
     end
@@ -347,7 +347,7 @@ function scene.load()
     TABLE.clear(particles)
 
     -- Calculate score and sort
-    local model,word=data.model,data.word
+    local model,word=levelData.model,levelData.word
     for i=1,#AnsWordList do
         local w=AnsWordList[i]
         w._score=(#w.word<=#word/2 or #w.word>=#word*2) and -26 or GetSimilarity(model,word,w.word)
@@ -431,19 +431,19 @@ function scene.keyDown(key,isRep)
     elseif key=='=' then
         if isRep then return true end
         if result then return end
-        if data.daily then
+        if levelData.daily then
             MSG.new('info','Never gonna give you up~',1)
         elseif TASK.lock("sureGiveup",1) then
             MSG.new('warn','Press again to give up',0.5)
         else
-            guess(data.word,true)
+            guess(levelData.word,true)
         end
     elseif key=='c' and isCtrlDown() then
-        if data.fixed then
+        if levelData.fixed then
             MSG.new('info',"Can't export code in this mode",0.5)
             return
         else
-            local str=GenerateCode(data)
+            local str=GenerateCode(levelData)
             love.system.setClipboardText(str)
             MSG.new('check',"Riddle code copied to clipboard!",1)
         end

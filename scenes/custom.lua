@@ -24,7 +24,7 @@ end
 scene.widgetList={
     WIDGET.new{type='slider',x=250,y=220,w=500,axis={1,4,1},labelDistance=40,textAlwaysShow=true,disp=function() return lib   end,valueShow=function(s) return optionNames.lib[s._pos0] end,code=function(i) lib=i end},
     WIDGET.new{type='slider',x=250,y=300,w=500,axis={1,4,1},labelDistance=40,textAlwaysShow=true,disp=function() return len   end,valueShow=function(s) return optionNames.len[s._pos0] end,code=function(i) len=i end},
-    WIDGET.new{type='slider',x=250,y=380,w=500,axis={1,6,1},labelDistance=40,textAlwaysShow=true,disp=function() return model end,valueShow=function(s) return optionNames.model[s._pos0] end,code=function(i) model=i end},
+    WIDGET.new{type='slider',x=250,y=380,w=500,axis={1,7,1},labelDistance=40,textAlwaysShow=true,disp=function() return model end,valueShow=function(s) return optionNames.model[s._pos0] end,code=function(i) model=i end},
     WIDGET.new{type='button_fill',x=450,y=500,w=260,h=90,fontSize=50,text="Start",code=function()
         local LengthLevel={
             {4,6},
