@@ -47,8 +47,9 @@ WIDGET._prototype.slider._approachSpeed=260
 
 ---@class Similariddle.word
 ---@field word string
----@field _score number
 ---@field src string
+---@field _score number
+---@field _srcScore number
 
 do -- Load words
     local Primes={2}
@@ -89,6 +90,7 @@ do -- Load words
                     table.insert(AnsWordList,{
                         word=lib[i],
                         src=libNames[libID],
+                        _srcScore=1.1-libID*.1,
                     })
                 end
             end
@@ -174,8 +176,9 @@ do -- Game code
         SCN.go(data.model~=7 and 'play' or 'play_final',nil,data)
     end
     local sub,find,match,byte,rep=string.sub,string.find,string.match,string.byte,string.rep
-    local max,min=math.max,math.min
-    local abs=math.abs
+    local max,min,abs=math.max,math.min,math.abs
+    local between=MATH.between
+    local ins,rem=table.insert,table.remove
     local function combMatch(model,s1,s2)
         assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
         local length=max(#match(s1,'%S+'),#match(s2,'%S+'))
@@ -341,6 +344,47 @@ do -- Game code
     -- print(GetSimilarity(4,"starting","starting"))
     -- print(combMatch(3,"pristine"," routine"))
     -- print(combMatch(3," routine","pristine"))
+    function GetDifficulty(word,model,count)
+        local scores={}
+        for i=1,#AnsWordList do
+            local w=AnsWordList[i]
+            if between(#w.word,#word/2+.1,#word*2-.1) then
+                ins(scores,GetSimilarity(model,word,w.word)*w._srcScore)
+            end
+        end
+        table.sort(scores)
+        local sum=0
+        for i=#scores-count+1,#scores do
+            sum=sum+scores[i]
+        end
+        return sum/count*100
+    end
+    -- print(math.floor(GetDifficulty('apt',3,20)))
+    -- print(math.floor(GetDifficulty('company',3,20)))
+    -- print(math.floor(GetDifficulty('generate',3,20)))
+    -- print(math.floor(GetDifficulty('inquiry',3,20)))
+    -- print(math.floor(GetDifficulty('themselves',3,20)))
+    -- print(math.floor(GetDifficulty('whatsoever',3,20)))
+    -- print(math.floor(GetDifficulty('enthusiasm',3,20)))
+    -- print(math.floor(GetDifficulty('magnificent',3,20)))
+    -- print(math.floor(GetDifficulty('significant',3,20)))
+    -- CALCULATE DIFFICULTY OF ALL WORD
+    -- for i=1,#WordLib[3] do
+    --     local testWord=WordLib[3][i]
+    --     if #testWord==8 then
+    --         print(testWord,math.floor(GetDifficulty(testWord,3,20)))
+    --     end
+    -- end
+    -- local words={}
+    -- for i=1,#AnsWordList do
+    --     if #AnsWordList[i].word>12 then
+    --         ins(words,AnsWordList[i].word)
+    --     end
+    -- end
+    -- for i=1,#words do
+    --     local testWord=words[i]
+    --     print(testWord,math.floor(GetDifficulty(testWord,3,20)))
+    -- end
 end
 
 -- Title

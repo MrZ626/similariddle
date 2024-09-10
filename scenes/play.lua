@@ -41,6 +41,7 @@ local find,sub,rep,paste=string.find,string.sub,string.rep,STRING.paste
 
 local methodName={"score","id","word","length"}
 local dirName={'ascend','descend'}
+local warningDisplayTime={80,60,40,20,10}
 
 local defaultSortMethod={
     {
@@ -90,6 +91,10 @@ local levelData
 local wordRankHashtable={}
 --- @type string|false
 local result
+--- @type number
+local warnLevel
+--- @type string?
+local warnString
 --- @type guess?
 local lastGuess
 --- @type table<number|string,guess>
@@ -124,6 +129,9 @@ local function updateViewHis(guess,id)
             table.sort(viewHistory[i],hisSortFunc)
         end
     end
+end
+local function showWarnString()
+    warnString=('! '):rep(warnLevel):trim()
 end
 
 local function answerColor(score)
@@ -248,6 +256,9 @@ local function guess(w,giveup)
     history[id]=lastGuess -- [number]
     history[w]=lastGuess  -- [string]
     updateViewHis(lastGuess,nil)
+    if warnLevel>0 and not warnString and #history==warningDisplayTime[warnLevel] then
+        showWarnString()
+    end
 
     if rank<=2600 and not result then
         local rate=MATH.iLerp(1,2600,rank)
@@ -281,7 +292,10 @@ local function guess(w,giveup)
             end
         end
     end
-    if _result then result=_result end
+    if _result then
+        result=_result
+        showWarnString()
+    end
     return true
 end
 
@@ -362,6 +376,9 @@ function scene.load()
         prev=cur
     end
     collectgarbage()
+
+    warnLevel=math.ceil(MATH.clamp(12-GetDifficulty(levelData.word,3,20)/5,0,5))
+    warnString=nil
 
     if debug then
         print("--------------------------")
@@ -651,6 +668,13 @@ function scene.draw()
             GC.mDraw(p.word)
         end
         gc_pop()
+    end
+
+    if warnString then
+        gc_replaceTransform(SCR.xOy_dr)
+        gc_setColor(COLOR.R)
+        setFont(50,'_norm')
+        GC.mStr(warnString,-225,-150)
     end
 end
 
