@@ -585,7 +585,7 @@ evanescent
 evaporate
 evaporation
 eventual
-eventuatevi
+eventuate
 evince
 exacerbate
 excommunicate
@@ -659,7 +659,7 @@ filament
 filial
 firmness
 fitness
-flabbergastvt
+flabbergast
 flagrant
 flamboyant
 flare
