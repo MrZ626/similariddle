@@ -353,6 +353,8 @@ do -- Game code
             end
         end
         table.sort(scores)
+        if count>#scores then count=#scores end
+
         local sum=0
         for i=#scores-count+1,#scores do
             sum=sum+scores[i]
