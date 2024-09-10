@@ -62,14 +62,15 @@ local function IoU_demo()
     print(res)
 end
 
-local arrowImg do
+local arrowImg=(function()
     local imgData=love.image.newImageData(5,7,'rgba4')
     for y=0,6 do
         imgData:setPixel(math.abs(y-3),y,1,1,1,1)
     end
-    arrowImg=gc.newImage(imgData)
-    arrowImg:setFilter('nearest','nearest')
-end
+    local img=gc.newImage(imgData)
+    img:setFilter('nearest','nearest')
+    return img
+end)()
 
 ---@type Similariddle.LevelData
 local levelData
@@ -178,19 +179,21 @@ local function guess(word,hisMode,giveup)
         MSG.new('info',"Word \""..word.."\" doesn't exist",0.5)
         return
     end
-    local posInHistory=TABLE.find(guessHis,word)
-    if posInHistory then
-        if not hisMode then
-            MSG.new('info',"You've already guessed \""..word.."\"",0.5)
-        end
-        rem(guessHis,posInHistory)
+    if hisMode then
+        guessHisPointer=TABLE.find(guessHis,word) or #guessHis
     else
-        if #guessHis>26 then
-            rem(guessHis,1)
+        local posInHistory=TABLE.find(guessHis,word)
+        if posInHistory then
+            MSG.new('info',"You've already guessed \""..word.."\"",0.5)
+            guessHisPointer=posInHistory
+        else
+            ins(guessHis,word)
+            if #guessHis>26 then
+                rem(guessHis,1)
+            end
+            guessHisPointer=#guessHis
         end
-        guessHisPointer=#guessHis
     end
-    ins(guessHis,word)
     TABLE.clear(IoU_curve)
     local maxPos,maxIoU=0,0
     for x=ansData.renderStart-guessData.pixelSize+1,ansData.renderStart+#ansData.bitMap[1]-1 do
@@ -351,15 +354,9 @@ function scene.draw()
 
     -- Guess history marks
     gc.setColor(COLOR.DL)
-    if guessHisPointer>1 then
-        gc.printf("↑",-55,17,100,'center',nil,.18)
-    end
-    if guessHisPointer<=#guessHis then
-        gc.printf("↓",-55,25,100,'center',nil,.18)
-    end
-    if guessHisPointer<=#guessHis then
-        gc.printf(guessHisPointer..'/'..#guessHis,-55,21,100,'center',nil,.18)
-    end
+    if guessHisPointer>1 then gc.printf("↑",-55,17,100,'center',nil,.18) end
+    if guessHisPointer<=#guessHis then gc.printf("↓",-55,25,100,'center',nil,.18) end
+    if guessHisPointer<=#guessHis then gc.printf(guessHisPointer..'/'..#guessHis,-55,21,100,'center',nil,.18) end
     if guessData.pixelSize>0 then
         gc.draw(arrowImg,-60,19.5)
         gc.draw(arrowImg,60,19.5,nil,-1,1)
