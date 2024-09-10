@@ -79,6 +79,7 @@ do -- Load words
 
     ---@type Similariddle.word[]
     AnsWordList={} -- Temp list, for sorting by simmilarity
+    local libNames={'CET4','CET6','TEM8','GRE'}
     for libID,lib in next,WordLib do
         for i=1,#lib do
             lib[i]=lib[i]:lower()
@@ -87,7 +88,7 @@ do -- Load words
                 if libID<=4 then
                     table.insert(AnsWordList,{
                         word=lib[i],
-                        src=({'CET4','CET6','TEM8','GRE'})[libID],
+                        src=libNames[libID],
                     })
                 end
             end
@@ -172,12 +173,12 @@ do -- Game code
     function StartGame(data)
         SCN.go(data.model~=7 and 'play' or 'play_final',nil,data)
     end
-    local sub,find,byte,rep=string.sub,string.find,string.byte,string.rep
+    local sub,find,match,byte,rep=string.sub,string.find,string.match,string.byte,string.rep
     local max,min=math.max,math.min
     local abs=math.abs
     local function combMatch(model,s1,s2)
         assert(#s1==#s2,"strComp(s1,s2): #s1!=#s2")
-        local length=max(#STRING.trim(s1),#STRING.trim(s2))
+        local length=max(#match(s1,'%S+'),#match(s2,'%S+'))
         local t1,t2={},{}
         for i=1,#s1 do
             t1[i]=sub(s1,i,i)
@@ -192,16 +193,16 @@ do -- Game code
                         -- Consecutive Prize (not implemented here)
                     elseif model==2 then
                         -- Trisected Principle
-                        score=score+max(1-abs(n)/3,0)
+                        score=score+max(1-(n>=0 and n or -n)/3,0)
                     elseif model==3 then
                         -- Arithmetic Typewriter
-                        score=score+1/(abs(n)+1)
+                        score=score+1/((n>=0 and n or -n)+1)
                     elseif model==4 then
                         -- Pirate Ship (scoring part)
-                        score=score+1/(abs(n)+1)
+                        score=score+1/((n>=0 and n or -n)+1)
                     elseif model==5 then
                         -- Graceful Failure
-                        score=score+1-abs(n)/length/2
+                        score=score+1-(n>=0 and n or -n)/length/2
                     elseif model==6 then
                         -- Weaving Logic (not implemented here)
                     elseif model==7 then
@@ -223,11 +224,11 @@ do -- Game code
         --     print("."..ans..".","."..try..".")
         -- end
 
-        local LEN=max(#STRING.trim(ans),#STRING.trim(try))
         local total=0
 
         local tryS,tryE=find(try,'%S+')
         local ansS,ansE=find(ans,'%S+')
+        local LEN=max(tryE-tryS+1,ansE-ansS+1)
         for i=tryS,tryE do
             local core=byte(try,i)
             local maxPoint=0
