@@ -26,6 +26,18 @@ for n=1,#bitMap do
 end
 ---@cast bitMap boolean[][][]
 
+local alphabet=STRING.atomize('abcdefghijklmnopqrstuvwxyz')
+local kern={}
+for _,c in next,alphabet do kern['d'..c]=-1 end
+for _,c in next,alphabet do kern['i'..c]=1; kern[c..'i']=1 end
+for _,c in next,alphabet do kern['j'..c]=1; kern[c..'j']=-1 end
+for _,c in next,alphabet do kern[c..'l']=1 end
+TABLE.update(kern,{
+    dd=-1,di= 0,dj=-2,dl= 0,
+    id= 1,ii= 1,ij= 0,il= 1,
+    jd= 1,ji= 1,jj= 0,jl= 1,
+    ld= 0,li= 0,lj=-1,ll= 0,
+})
 -- 交并比参考
 local function IoU_demo()
     local compMat={}
@@ -101,13 +113,26 @@ local stampPage ---@type number
 ---@return boolean[][]
 local function getWordBitMap(word)
     local wordMap={{},{},{},{},{},{},{},{},{}}
+    local prevChar=''
     for _,char in next,STRING.atomize(word) do
+        local writeX=kern[prevChar..char] or 0
+        -- Add space if dist>0
+        if writeX>0 then
+            for y=1,#wordMap do
+                for _=1,writeX do
+                    ins(wordMap[y],false)
+                end
+            end
+            writeX=0
+        end
+        writeX=#wordMap[1]+writeX
         local charMap=bitMap[char:byte()-96]
         for y=1,#charMap do
             for x=1,#charMap[y] do
-                ins(wordMap[y],charMap[y][x])
+                wordMap[y][writeX+x]=wordMap[y][writeX+x] or charMap[y][x]
             end
         end
+        prevChar=char
     end
     return wordMap
 end
@@ -257,6 +282,7 @@ function scene.keyDown(key,isRep)
         local text=love.system.getClipboardText()
         if not text then return end
         text=text:lower():match('[a-z]+')
+        resetInputState()
         updateGuessWord(text)
         if AnsWordHashMap[text] then
             guess(text,false)
