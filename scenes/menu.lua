@@ -3,7 +3,7 @@
 --     for _=1,26 do math.random() end
 --     local lib=MATH.randFreq{7,2,1,0}
 --     local wordLib=WordLib[lib]
---     print(wordLib[math.random(1,#wordLib)])
+--     print(TABLE.getRandom(wordLib))
 -- end
 
 local scene={}
@@ -51,7 +51,7 @@ scene.widgetList={
         StartGame{
             daily=true,
             fixed=true,
-            word=wordLib[math.random(1,#wordLib)],
+            word=TABLE.getRandom(wordLib),
             lib=lib,
             len=MATH.randFreq{6,10,3,1},
             model=MATH.randFreq{6,4,3,2,1},
