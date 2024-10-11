@@ -20,6 +20,8 @@ function scene.keyDown(key,isRep)
         else
             ZENITHA._quit('fade')
         end
+    elseif key=='i' then
+        SCN.go('about')
     elseif key=='f6' then
         pcall(love._openConsole)
     end
@@ -28,21 +30,22 @@ end
 
 function scene.draw()
     FONT.set(80)
-    GC.mStr(GameData.dailyPassed and FakeTitleString or TitleString,500,120)
+    GC.mStr(GameData.dailyPassed and FakeTitleString or TitleString,500,80)
     FONT.set(35)
-    GC.mStr("By MrZ & Staffhook",500,220)
+    GC.mStr("By MrZ & Staffhook",500,180)
     FONT.set(30)
     if GameData.dailyCount>0 then
-        GC.printf(GameData.dailyCount,350-130,430,260,'right')
+        GC.printf(GameData.dailyCount,350-130,495,240,'right')
     end
     if GameData.dailyPassed then
         GC.setColor(.62,.9,.42)
-        GC.print("Pass",350-130,430)
+        GC.print("Pass",350-130,495)
     end
 end
 
 scene.widgetList={
-    WIDGET.new{type='button_fill',x=350,y=380,w=260,h=90,fontSize=45,text="Daily",code=function()
+    WIDGET.new{type='button_fill',x=500,y=310,w=260,h=90,fontSize=45,text="Level",code=WIDGET.c_goScn'level'},
+    WIDGET.new{type='button_fill',x=350,y=430,w=260,h=90,fontSize=45,text="Daily",code=function()
         local day=os.date("!%Y")*366+os.date("!%j")
         math.randomseed(day)
         for _=1,26 do math.random() end
@@ -57,7 +60,8 @@ scene.widgetList={
             model=MATH.randFreq{6,4,3,2,1},
         }
     end},
-    WIDGET.new{type='button_fill',x=650,y=380,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
+    WIDGET.new{type='button_fill',x=650,y=430,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
+    WIDGET.new{type='button_fill',pos={0,1},text='About',x= 80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'i'},
     WIDGET.new{type='button_fill',pos={1,1},text='Quit',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
 }
 return scene
