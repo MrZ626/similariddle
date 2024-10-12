@@ -347,7 +347,7 @@ function scene.load()
         pcall(love._openConsole)
         local text=love.system.getClipboardText()
         if type(text)=='string' then
-            text=STRING.trim(text):lower()
+            text=text:trim():lower()
             if not text:find('[^a-zA-Z]') then
                 levelData.word=text
             end

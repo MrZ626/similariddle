@@ -23,7 +23,7 @@ function scene.keyDown(key,isRep)
     if key=='o' and love.keyboard.isDown('v') then
         local word=love.system.getClipboardText()
         if type(word)~='string' then return end
-        word=STRING.trim(word)
+        word=word:trim()
         if (AnsWordHashMap[word] or 5)<=4 then
             lib=AnsWordHashMap[word]
         else
