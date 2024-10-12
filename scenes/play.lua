@@ -203,11 +203,15 @@ local function guess(w,giveup)
             else
                 _result='win'
                 if levelData.daily and not GameData.dailyPassed then
+                    -- Save daily progress
                     GameData.dailyPassed=true
                     GameData.dailyCount=GameData.dailyCount+1
                     SaveData()
                 else
-                    -- TODO: normal win
+                    if GameData.levelPass[levelData.levelID] then
+                        GameData.levelPass[levelData.levelID]=1
+                        SaveData()
+                    end
                 end
                 MSG.new('check',"You got it right!",2.6)
             end

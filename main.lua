@@ -44,6 +44,7 @@ WIDGET._prototype.slider._approachSpeed=260
 ---@field lib number
 ---@field len number
 ---@field model number
+---@field levelID? number
 
 ---@class Similariddle.word
 ---@field word string
@@ -433,6 +434,7 @@ GameData={
     date=os.date("!%Y%m%d"),
     dailyPassed=false,
     dailyCount=0,
+    levelPass=TABLE.new(0,41),
 }
 function CheckDate()
     local date=os.date("!%Y%m%d")

@@ -233,6 +233,10 @@ local function guess(word,hisMode,giveup)
         win=true
         if not giveup then
             MSG.new('check',"Correct!")
+            if GameData.levelPass[levelData.levelID] then
+                GameData.levelPass[levelData.levelID]=1
+                SaveData()
+            end
         end
     end
     guessData.state='comparing'

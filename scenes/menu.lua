@@ -10,6 +10,8 @@ local scene={}
 
 function scene.load()
     CheckDate()
+    scene.widgetList.credits.color=table.concat(TABLE.sub(GameData.levelPass,37,41))=='11111' and 'G' or 'L'
+    scene.widgetList.credits:reset()
 end
 
 function scene.keyDown(key,isRep)
@@ -20,8 +22,8 @@ function scene.keyDown(key,isRep)
         else
             ZENITHA._quit('fade')
         end
-    elseif key=='i' then
-        SCN.go('about')
+    elseif key=='c' then
+        SCN.go('credits')
     elseif key=='f6' then
         pcall(love._openConsole)
     end
@@ -61,7 +63,7 @@ scene.widgetList={
         }
     end},
     WIDGET.new{type='button_fill',x=650,y=430,w=260,h=90,fontSize=45,text="Custom",code=WIDGET.c_goScn'custom'},
-    WIDGET.new{type='button_fill',pos={0,1},text='About',x= 80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'i'},
-    WIDGET.new{type='button_fill',pos={1,1},text='Quit',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
+    WIDGET.new{type='button_fill',name='credits',pos={0,1},text='Credits',x= 80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'c'},
+    WIDGET.new{type='button_fill',pos={1,1},color='lR',text='Quit',x=-80,y=-50,w=130,h=70,code=WIDGET.c_pressKey'escape'},
 }
 return scene
