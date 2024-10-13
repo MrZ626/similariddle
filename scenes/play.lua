@@ -454,6 +454,8 @@ function scene.keyDown(key,isRep)
         if result then return end
         if levelData.daily then
             MSG.new('info','Never gonna give you up~',1)
+        elseif levelData.levelID then
+            MSG.new('info','Never gonna let you down~',1)
         elseif TASK.lock("sureGiveup",1) then
             MSG.new('warn','Press again to give up',0.5)
         else
