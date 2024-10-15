@@ -67,6 +67,7 @@ ancestral
 angelic
 annals
 anomaly
+anonymity
 anthem
 anther
 antipathy
@@ -903,6 +904,7 @@ intimacy
 intimidate
 intolerable
 intrepid
+intriguing
 intrinsic
 introspective
 intruder
@@ -1450,6 +1452,7 @@ scoundrel
 scowl
 screech
 scrutinize
+scrutiny
 sculptor
 scurrilous
 scurry
