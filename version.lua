@@ -1,5 +1,5 @@
 return{
     ["appName"]="Similariddle",
-    ["string"]="V1.1.3",
+    ["string"]="V1.1.4",
     ["name"]="似 Similariddle",
 }
