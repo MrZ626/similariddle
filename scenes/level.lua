@@ -1,8 +1,8 @@
 local scene={}
 
 local levelData={
-    {"hello","w1-2","w1-3","w1-4","w1-5","w1-6"},
-    {"w2-1","w2-2","w2-3","w2-4","w2-5","w2-6"},
+    {"hello","world","w1-3","w1-4","w1-5","w1-6"},
+    {"w2-1","second","w2-3","w2-4","w2-5","w2-6"},
     {"w3-1","w3-2","w3-3","w3-4","w3-5","w3-6"},
     {"w4-1","w4-2","w4-3","w4-4","w4-5","w4-6"},
     {"w5-1","w5-2","w5-3","w5-4","w5-5","w5-6"},
@@ -17,7 +17,7 @@ local function levelPlayable(i)
     elseif i%6==1 then
         return GameData.levelPass[i-6]==1
     else
-        return GameData.levelPass[i-1]==1 and GameData.levelPass[i-6]==1
+        return GameData.levelPass[i-1]==1 or GameData.levelPass[i-6]==1 or GameData.levelPass[i-7]==1
     end
 end
 local function playLevel(word,model,levelID)
