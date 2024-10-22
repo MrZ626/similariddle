@@ -3286,6 +3286,7 @@ relentless
 relinquish
 remedial
 remembrance
+reminiscence
 reminiscent
 remiss
 remission
@@ -3561,6 +3562,7 @@ semantic
 semantics
 semblance
 seminal
+seminar
 senatorial
 senile
 senility
