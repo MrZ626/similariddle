@@ -1,12 +1,54 @@
 local scene={}
 
 local levelData={
-    {"hello","world","w1-3","w1-4","w1-5","w1-6"},
-    {"w2-1","second","w2-3","w2-4","w2-5","w2-6"},
-    {"w3-1","w3-2","w3-3","w3-4","w3-5","w3-6"},
-    {"w4-1","w4-2","w4-3","w4-4","w4-5","w4-6"},
-    {"w5-1","w5-2","w5-3","w5-4","w5-5","w5-6"},
-    {"w6-1","w6-2","w6-3","w6-4","w6-5","w6-6"},
+    {
+        "hello",
+        "world",
+        "symphony",
+        "scramble", -- favorski
+        "subterranean",
+        "suffocate",
+    },
+    {
+        "second",
+        "blackboard",
+        "restaurant",
+        "stagnant",
+        "scrutiny", -- zqh
+        "amalgam",
+    },
+    {
+        "similarity",
+        "unlucky",
+        "auxiliary",
+        "enthusiasm",
+        "camouflage",
+        "besmirch",
+    },
+    {
+        "sticky",
+        "sacrifice", -- grass
+        "calendar",
+        "deluxe",
+        "equinox",
+        "fulcrum",
+    },
+    {
+        "teenager",
+        "decrease",
+        "souvenir", -- iscream
+        "perimeter",
+        "flamboyant",
+        "cornucopia",
+    },
+    {
+        "eight",
+        "advertisement",
+        "diagnose",
+        "monochrome",
+        "repertoire",
+        "soliloquy", -- nbrige
+    },
 }
 
 local function levelPlayable(i)
