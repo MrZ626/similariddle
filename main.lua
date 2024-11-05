@@ -71,11 +71,11 @@ do -- Load words
     local ABC={}
     for i=1,385 do if i%5~=0 and i%7~=0 and i%11~=0 then table.insert(ABC,i) end end
     WordLib={
-        FILE.load('lib_cet4.txt','-string'):split('\r\n'),
-        FILE.load('lib_cet6.txt','-string'):split('\r\n'),
-        FILE.load('lib_tem8.txt','-string'):split('\r\n'),
-        FILE.load('lib_gre.txt','-string'):split('\r\n'),
-        FILE.load('lib_full.txt','-string'):split('\r\n'),
+        FILE.load('lib_cet4.txt','-string'):split('%s+',true),
+        FILE.load('lib_cet6.txt','-string'):split('%s+',true),
+        FILE.load('lib_tem8.txt','-string'):split('%s+',true),
+        FILE.load('lib_gre.txt','-string'):split('%s+',true),
+        FILE.load('lib_full.txt','-string'):split('%s+',true),
     }
     AnsWordHashMap={}
 
